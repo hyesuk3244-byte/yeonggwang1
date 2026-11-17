@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>세곡선 출항 작전</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--sea:#1f6f8b;--deep:#0f3d56;--sand:#f6ecd6;--paper:#fffaf0;--ink:#24323b;--red:#d94f3d;--gold:#f2b134;--green:#2e9d63;--line:#e3d6b8;--mute:#6f828c}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Noto Sans KR',sans-serif;color:var(--ink);background:linear-gradient(180deg,#bfe6f2 0%,#e9f6fa 40%,var(--sand) 100%);min-height:100vh}
+h1,h2,h3,.jua{font-family:'Jua',sans-serif;font-weight:400}
+button{font-family:'Jua',sans-serif;font-size:18px;border:0;border-radius:14px;padding:10px 18px;cursor:pointer;transition:transform .1s;color:inherit}
+button:active{transform:scale(.96)}
+.btn{background:var(--sea);color:#fff;box-shadow:0 4px 0 var(--deep)}
+.btn.gold{background:var(--gold);color:#3b2a00;box-shadow:0 4px 0 #b77e10}
+.btn.ghost{background:#fff;color:var(--deep);box-shadow:0 3px 0 #9fc3cf}
+.btn.red{background:var(--red);color:#fff;box-shadow:0 4px 0 #8f2a1d}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+input,select{font-family:'Jua',sans-serif;font-size:18px;padding:8px 10px;border-radius:10px;border:2px solid var(--line);background:#fff;color:var(--ink)}
+.wrap{max-width:1280px;margin:0 auto;padding:16px}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{margin:0;font-size:32px;color:var(--deep)}
+header .sub{color:#3d5a66;font-size:15px}
+.card{background:var(--paper);border-radius:20px;padding:18px;box-shadow:0 6px 18px rgba(15,61,86,.12);border:2px solid var(--line)}
+.hidden{display:none!important}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}
+.flag{width:32px;height:32px;border-radius:50%;display:inline-grid;place-items:center;color:#fff;font-family:'Jua';font-size:15px;flex:none;vertical-align:middle}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:13px;font-weight:700;white-space:nowrap}
+.b-sari{background:#ffe1dc;color:#a8321f}.b-jogeum{background:#e2ecf5;color:#3c5d7a}.b-mid{background:#eef3e6;color:#4d6b2f}
+.tip{background:#eaf6fb;border-left:6px solid var(--sea);padding:10px 12px;border-radius:10px;text-align:left;line-height:1.6;margin-top:10px;font-size:15px}
+.note{font-size:12px;color:var(--mute);line-height:1.5}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:1px}
+/* 처음 화면 */
+.rolecard{text-align:center;cursor:pointer;transition:transform .15s}
+.rolecard:hover{transform:translateY(-3px)}
+.rolecard .ic{font-size:64px}
+/* 교사 */
+.teamrow{display:flex;gap:8px;align-items:center;margin:6px 0}
+.teamrow input{flex:1}
+.opt{display:flex;align-items:center;gap:10px;margin:10px 0;font-size:16px;flex-wrap:wrap}
+#tRun{display:grid;grid-template-columns:1fr 360px;gap:16px;margin-top:14px}
+.codebox{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.code{font-family:'Jua';font-size:64px;letter-spacing:6px;color:var(--deep);line-height:1}
+.timer{font-family:'Jua';font-size:56px;color:var(--deep);line-height:1;min-width:150px;text-align:center}
+.timer.low{color:var(--red)}
+.ttable{width:100%;border-collapse:separate;border-spacing:0 6px;margin-top:10px}
+.ttable td,.ttable th{padding:8px 10px;text-align:center;font-size:17px}
+.ttable th{font-family:'Jua';font-weight:400;color:var(--mute)}
+.ttable tr.tr td{background:#fff;border-top:2px solid var(--line);border-bottom:2px solid var(--line)}
+.ttable tr.tr td:first-child{border-left:2px solid var(--line);border-radius:12px 0 0 12px;text-align:left}
+.ttable tr.tr td:last-child{border-right:2px solid var(--line);border-radius:0 12px 12px 0}
+.ttable .nm{font-family:'Jua';font-size:20px}
+.ttable .tot{font-family:'Jua';font-size:24px;color:var(--deep)}
+.race{background:linear-gradient(180deg,#9ad8ea,#2f8fb0);border-radius:16px;padding:10px 12px 8px;color:#fff;margin-bottom:12px}
+.race .ends{display:flex;justify-content:space-between;font-family:'Jua';font-size:15px;text-shadow:0 1px 2px rgba(0,0,0,.3)}
+.lane{position:relative;height:40px;margin:4px 0;border-bottom:1px dashed rgba(255,255,255,.5)}
+.boat{position:absolute;top:2px;transition:left 1.4s cubic-bezier(.3,1.4,.5,1);font-size:26px;line-height:34px;display:flex;align-items:center;gap:3px;transform:translateX(-18px)}
+.boat span{font-size:12px;font-family:'Jua';background:var(--c);padding:1px 6px;border-radius:6px;white-space:nowrap;line-height:1.4}
+/* 학생 */
+.sbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0}
+.sbar .nm{font-family:'Jua';font-size:24px}
+.ships{display:flex;gap:4px;font-size:26px}
+.ships .used{opacity:.25;filter:grayscale(1)}
+.stimer{font-family:'Jua';font-size:28px;color:var(--deep)}
+.stimer.low{color:var(--red)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.dow{text-align:center;font-family:'Jua';color:#5b7380;padding:4px 0}
+.dow.sun{color:var(--red)}
+.day{position:relative;background:#fff;border:2px solid var(--line);border-radius:12px;min-height:122px;padding:6px;cursor:pointer;text-align:left;font-family:'Noto Sans KR';font-size:14px;box-shadow:none;transition:transform .12s,box-shadow .12s;overflow:hidden}
+.day:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 12px rgba(0,0,0,.08)}
+.day.empty{background:transparent;border:0;cursor:default}
+.day .d{font-family:'Jua';font-size:20px}
+.day .ld{font-size:11px;color:#7c8a91;margin-left:3px}
+.day .wx{position:absolute;top:4px;right:6px;font-size:22px}
+.day .hw{font-size:11px;margin-top:3px;line-height:1.35}
+.up{color:#d6332a}.dn{color:#1e6fd9}
+.day.storm{background:#f3eef9}
+.day .res{position:absolute;inset:0;display:grid;place-items:center;font-size:36px;background:rgba(255,255,255,.7)}
+.day:disabled{cursor:not-allowed}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:#4f6670;margin-top:10px;align-items:center}
+details.help{margin-top:12px}
+details.help summary{cursor:pointer;font-family:'Jua';font-size:18px;color:var(--deep)}
+.help table{border-collapse:collapse;margin-top:8px;font-size:15px}
+.help td{padding:5px 10px;border-bottom:1px dotted var(--line)}
+/* 하루 보기 */
+.dayhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.dayhead h2{margin:0;font-size:28px;color:var(--deep)}
+.facts{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+.fact{background:#fff;border:2px solid var(--line);border-radius:14px;padding:8px 12px;font-size:15px}
+.fact b{font-family:'Jua';font-weight:400;font-size:19px}
+.tl{width:100%;height:auto;display:block;background:#fff;border-radius:14px;border:2px solid var(--line);touch-action:manipulation}
+.harbor{position:relative;height:70px;margin-top:10px;border-radius:14px;overflow:hidden;background:linear-gradient(180deg,#bfe6f7 0,#bfe6f7 50%,#3fa7d6 50%)}
+.harbor .ship{position:absolute;left:8%;top:6px;font-size:44px;transition:transform 2s ease-in,left 2.2s ease-in}
+.harbor .ship.go{left:88%}
+.harbor .ship.stuck{transform:rotate(-22deg) translateY(10px)}
+.harbor .ship.sink{transform:rotate(80deg) translateY(30px);opacity:.4}
+.harbor .mud{position:absolute;left:0;bottom:0;width:30%;height:22px;background:#8a6b45;border-radius:0 30px 0 0;opacity:0;transition:opacity .6s}
+.harbor .mud.on{opacity:1}
+.harbor .lbl{position:absolute;font-family:'Jua';font-size:14px;color:var(--deep);top:4px}
+.bigstop{font-size:34px;padding:16px 40px;border-radius:20px}
+.result{display:flex;gap:14px;align-items:center;margin-top:12px}
+.result .ic{font-size:56px}
+.result .pts{font-family:'Jua';font-size:40px}
+.donecode{font-family:'Jua';font-size:54px;letter-spacing:4px;color:var(--deep)}
+/* 모달 */
+.modal{position:fixed;inset:0;background:rgba(15,40,55,.55);display:grid;place-items:center;z-index:50;padding:16px;overflow:auto}
+.modal>.card{max-width:640px;width:100%;text-align:center;animation:pop .35s;max-height:92vh;overflow:auto}
+.modal h2{font-size:30px;margin:6px 0;color:var(--deep)}
+@keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+.podium{display:flex;justify-content:center;align-items:flex-end;gap:12px;margin:18px 0}
+.podium .p{width:120px;border-radius:12px 12px 0 0;color:#fff;font-family:'Jua';display:flex;flex-direction:column;justify-content:flex-end;padding:8px;text-align:center}
+.conf{position:fixed;top:-10px;width:10px;height:14px;z-index:60;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+.rank{text-align:left;font-size:18px;line-height:2.1}
+.anscal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;font-size:12px;text-align:left}
+.anscal div{background:#fff;border:1px solid var(--line);border-radius:8px;padding:4px;min-height:58px}
+.anscal .ok{background:#e4f6ea;border-color:#9fd6b1}
+.toast{position:fixed;left:50%;top:18%;transform:translateX(-50%);background:var(--red);color:#fff;padding:10px 18px;border-radius:12px;font-family:'Jua';font-size:22px;z-index:70}
+@media (max-width:900px){.grid2,#tRun{grid-template-columns:1fr}.code{font-size:48px}}
+@media (max-width:640px){.day{min-height:78px;padding:4px}.day .hw{display:none}.day .d{font-size:16px}.day .wx{font-size:17px}.day .badge{font-size:11px;padding:1px 5px}.cal{gap:3px}.wrap{padding:12px}header h1{font-size:26px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div style="font-size:44px">⛵</div>
+  <div style="flex:1">
+    <h1>세곡선 출항 작전</h1>
+    <div class="sub">법성포 물때표를 읽고, 물이 가장 높이 들어오는 때에 세곡선을 띄워요!</div>
+  </div>
+  <button class="btn ghost hidden" id="homeBtn" style="font-size:15px;padding:8px 12px">처음으로</button>
+</header>
+
+<!-- ===== 처음 화면 ===== -->
+<section id="home" class="grid2">
+  <div class="card rolecard" id="goTeacher"><div class="ic">👩‍🏫</div><h2>선생님 화면 만들기</h2><p>교실 TV에 띄워요. 참가 코드를 만들고, 라운드를 시작하고, 순위를 공개해요.</p></div>
+  <div class="card rolecard" id="goStudent"><div class="ic">📱</div><h2>우리 모둠 참가하기</h2><p>모둠 태블릿에서 열어요. 선생님 화면의 참가 코드 5자리를 넣어요.</p></div>
+  <div class="card" style="grid-column:1/-1">
+    <h3 style="margin-top:0">이렇게 진행해요</h3>
+    <ol style="line-height:1.8;margin:0">
+      <li>모든 모둠이 <b>같은 달력, 같은 날씨</b>로 <b>동시에</b> 해요. 먼저 고른다고 남의 날짜를 빼앗지 않아요.</li>
+      <li>라운드마다 세곡선 <b>3척</b>을 서로 다른 날에 띄워요. 날을 고른 뒤, 움직이는 시간 커서를 <b>멈춰!</b> 해서 출항 시각을 정해요.</li>
+      <li>물이 충분히 높을 때 떠나야 갯벌에 걸리지 않아요. 밤, 안개, 풍랑주의보도 조심해요.</li>
+      <li>점수는 선생님 화면에 모였다가, 모든 모둠이 내면 한꺼번에 공개돼요.</li>
+    </ol>
+    <p class="note" style="margin-bottom:0">※ 앱이 실행되는 달의 물때표를 스스로 계산해요(인터넷 없이도 돼요). 음력·물때는 달의 움직임으로, 만조·간조 시각은 바다타임 법성포 물때표에 맞춘 조석 계산으로 구했어요. 실제 표와 <b>30분 안팎</b> 차이가 날 수 있고, 물높이·날씨는 수업용 어림값이에요. 실제 출항은 수협 달력, 국립해양조사원, 바다타임 물때표로 확인하세요.</p>
+  </div>
+</section>
+
+<!-- ===== 교사: 설정 ===== -->
+<section id="tSetup" class="grid2 hidden">
+  <div class="card">
+    <h2 style="margin-top:0">① 모둠</h2>
+    <div id="teamList"></div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn ghost" id="addTeam">+ 모둠 추가</button>
+      <button class="btn ghost" id="delTeam">− 모둠 빼기</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2 style="margin-top:0">② 수업 설정</h2>
+    <div class="opt">첫 라운드 달력 <select id="ym"></select></div>
+    <div class="opt">라운드 수 <select id="rounds"><option value="2">2라운드</option><option value="3" selected>3라운드</option><option value="4">4라운드</option></select> <span class="note">라운드마다 다음 달 달력</span></div>
+    <div class="opt">라운드 시간 <select id="mins"><option value="3">3분</option><option value="4">4분</option><option value="5" selected>5분</option><option value="6">6분</option><option value="8">8분</option></select></div>
+    <div class="opt">시간 커서 빠르기 <select id="speed"><option value="14">느리게 (하루 14초)</option><option value="10" selected>보통 (하루 10초)</option><option value="6">빠르게 (하루 6초)</option></select></div>
+    <div class="tip" id="planTip"></div>
+    <button class="btn gold" id="tStart" style="font-size:24px;padding:14px 26px;margin-top:14px">참가 코드 만들기 ⚓</button>
+  </div>
+</section>
+
+<!-- ===== 교사: 진행 ===== -->
+<section id="tRun" class="hidden">
+  <div class="card">
+    <div class="codebox">
+      <div><div class="note">참가 코드</div><div class="code" id="tCode"></div><div class="note" id="tNet"></div></div>
+      <div style="flex:1"></div>
+      <div><div class="note" style="text-align:center" id="tRoundTxt"></div><div class="timer" id="tTimer">--:--</div></div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px" id="tActions"></div>
+    <table class="ttable" id="tTable"></table>
+    <details class="help" id="mBox"><summary>✍️ 연결이 안 되는 모둠: 결과 코드로 입력하기</summary>
+      <div class="opt">모둠 <select id="mTeam"></select> 라운드 <select id="mRound"></select> 점수 <input id="mScore" type="number" style="width:90px"> 확인 코드 <input id="mCode" maxlength="3" style="width:90px;text-transform:uppercase"> <button class="btn" id="mAdd">넣기</button></div>
+      <div class="note">모둠 태블릿의 '라운드 끝' 화면에 나온 점수와 확인 코드 3글자를 넣어요. 숫자를 바꾸면 확인 코드가 맞지 않아요.</div>
+    </details>
+  </div>
+  <aside>
+    <div class="race card" style="border:0">
+      <div class="ends"><span>법성포</span><span>한성(서울) 🏯</span></div>
+      <div id="lanes"></div>
+    </div>
+    <div class="card">
+      <h3 style="margin:0 0 6px">점수 규칙</h3>
+      <div style="font-size:14px;line-height:1.8">⛵ 출항 성공 <b>+10</b> · 만조 30분 안 <b>+5</b> / 1시간 안 <b>+3</b><br>🌬️ 순풍 부는 날 <b>+3</b><br>🟫 갯벌에 걸림 <b>−5</b> · 🌙 밤 / 🌫️ 안개 속 출항 <b>−5</b><br>🌊 풍랑주의보에 출항 <b>−10</b></div>
+      <div class="note" style="margin-top:8px">한 라운드 최고 점수는 54점이에요(3척 × 18점).</div>
+    </div>
+  </aside>
+</section>
+
+<!-- ===== 학생: 참가 ===== -->
+<section id="sJoin" class="grid2 hidden">
+  <div class="card">
+    <h2 style="margin-top:0">참가 코드 넣기</h2>
+    <div class="opt"><input id="jCode" inputmode="numeric" maxlength="5" placeholder="5자리" style="font-size:34px;width:200px;letter-spacing:6px;text-align:center"> <button class="btn gold" id="jFind" style="font-size:22px">찾기 🔍</button></div>
+    <div id="jMsg" class="tip hidden"></div>
+    <div id="jTeams" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"></div>
+    <div id="jOffline" class="hidden" style="margin-top:12px">
+      <div class="opt">우리 모둠 번호 <select id="oTeam"></select> 이름 <input id="oName" maxlength="8" style="width:140px"></div>
+      <button class="btn" id="oStart">연결 없이 시작하기</button>
+      <div class="note" style="margin-top:6px">라운드가 끝나면 나오는 점수와 확인 코드를 선생님께 보여 주세요.</div>
+    </div>
+  </div>
+  <div class="card">
+    <h2 style="margin-top:0">물때 용어 미리 보기</h2>
+    <table style="font-size:16px;line-height:1.7">
+      <tr><td><span class="badge b-sari">사리</span></td><td>보름·그믐 무렵. 밀물 때 물이 <b>아주 높이</b> 들어와요.</td></tr>
+      <tr><td><span class="badge b-jogeum">조금</span></td><td>반달 무렵. 물이 <b>조금만</b> 들고 나요.</td></tr>
+      <tr><td><span class="badge b-jogeum">무시</span></td><td>조금 다음 날. 물 움직임이 가장 작은 때예요.</td></tr>
+      <tr><td><span class="badge b-mid">○물</span></td><td>1물 → 7물로 갈수록 물이 커져요. 서해는 <b>7물때식</b>이에요.</td></tr>
+      <tr><td><b class="up">▲ 만조</b></td><td>밀물이 가장 높이 들어온 때. 하루에 두 번쯤 와요.</td></tr>
+      <tr><td><b class="dn">▼ 간조</b></td><td>썰물로 물이 가장 많이 빠진 때. 갯벌이 드러나요.</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ===== 학생: 게임 ===== -->
+<section id="sPlay" class="hidden">
+  <div class="sbar card" style="padding:10px 16px">
+    <span id="sFlag"></span><span class="nm" id="sName"></span>
+    <span class="jua" style="font-size:18px;color:var(--mute)" id="sRound"></span>
+    <div class="ships" id="sShips"></div>
+    <div style="flex:1"></div>
+    <span class="stimer" id="sTimer"></span>
+    <span class="note" id="sNet"></span>
+  </div>
+
+  <div class="card" id="vWait"><div style="text-align:center;padding:30px 10px"><div style="font-size:60px">⚓</div><h2 id="waitTitle">선생님이 라운드를 열면 시작해요</h2><p id="waitSub">기다리는 동안 물때 용어를 다시 읽어 봐요.</p></div></div>
+
+  <div class="card hidden" id="vCal">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+      <h2 style="margin:0;color:var(--deep)" id="calTitle"></h2>
+      <div style="flex:1"></div>
+      <div class="jua" style="font-size:18px" id="calHint"></div>
+    </div>
+    <div class="cal" id="cal"></div>
+    <div class="legend">
+      <span><span class="badge b-sari">사리</span> 물이 크게 드는 때</span>
+      <span><span class="badge b-jogeum">조금·무시</span> 물이 작게 드는 때</span>
+      <span><span class="up">▲ 만조</span> <span class="dn">▼ 간조</span></span>
+      <span>☀️ 맑음 ⛅ 구름 🌬️ 순풍 🌫️ 아침 안개 🌊 풍랑주의보</span>
+    </div>
+    <details class="help"><summary>📘 점수 규칙과 용어 도움말</summary>
+      <table>
+        <tr><td>⛵ 출항 성공</td><td><b>+10</b></td><td>물이 충분히 높을 때 떠나면 성공이에요.</td></tr>
+        <tr><td>🎯 만조 맞춤</td><td><b>+5 / +3</b></td><td>만조 시각 30분 안 / 1시간 안에 떠나면 더 받아요.</td></tr>
+        <tr><td>🌬️ 순풍</td><td><b>+3</b></td><td>돛배라서 바람이 알맞게 불면 더 잘 가요.</td></tr>
+        <tr><td>🟫 갯벌에 걸림</td><td><b>−5</b></td><td>물이 얕으면 무거운 세곡선이 바닥에 닿아요.</td></tr>
+        <tr><td>🌙 밤 / 🌫️ 안개</td><td><b>−5</b></td><td>해가 진 뒤, 해 뜨기 전, 안개 속에서는 뱃길을 잃어요.</td></tr>
+        <tr><td>🌊 풍랑주의보</td><td><b>−10</b></td><td>파도가 높은 날 떠나면 배가 부서져요.</td></tr>
+      </table>
+      <p class="note">포구가 좁아서 <b>하루에 한 척</b>만 떠날 수 있어요. 3척을 서로 다른 날에 보내요.</p>
+    </details>
+  </div>
+
+  <div class="card hidden" id="vDay">
+    <div class="dayhead">
+      <button class="btn ghost" id="dBack">◀ 달력</button>
+      <h2 id="dTitle"></h2>
+    </div>
+    <div class="facts" id="dFacts"></div>
+    <div id="dTL"></div>
+    <div class="harbor" id="harbor"><span class="lbl" style="left:2%">법성포</span><span class="lbl" style="right:2%">칠산 바다 → 한성</span><div class="mud" id="mud"></div><div class="ship" id="ship">⛵</div></div>
+    <div style="display:flex;gap:12px;align-items:center;margin-top:14px;flex-wrap:wrap" id="dCtl"></div>
+    <div id="dRes"></div>
+  </div>
+
+  <div class="card hidden" id="vDone" style="text-align:center"></div>
+</section>
+</div>
+
+<div class="modal hidden" id="modal"><div class="card" id="modalBody"></div></div>
+
+<script>/* PeerJS 1.5.4 (MIT) */
+(()=>{function e(e,t,n,r){Object.defineProperty(e,t,{get:n,set:r,enumerable:!0,configurable:!0})}function t(e){return e&&e.__esModule?e.default:e}class n{constructor(){this.chunkedMTU=16300,this._dataCount=1,this.chunk=e=>{let t=[],n=e.byteLength,r=Math.ceil(n/this.chunkedMTU),i=0,o=0;for(;o<n;){let s=Math.min(n,o+this.chunkedMTU),a=e.slice(o,s),c={__peerData:this._dataCount,n:i,data:a,total:r};t.push(c),o=s,i++}return this._dataCount++,t}}}class r{append_buffer(e){this.flush(),this._parts.push(e)}append(e){this._pieces.push(e)}flush(){if(this._pieces.length>0){let e=new Uint8Array(this._pieces);this._parts.push(e),this._pieces=[]}}toArrayBuffer(){let e=[];for(let t of this._parts)e.push(t);return function(e){let t=0;for(let n of e)t+=n.byteLength;let n=new Uint8Array(t),r=0;for(let t of e){let e=new Uint8Array(t.buffer,t.byteOffset,t.byteLength);n.set(e,r),r+=t.byteLength}return n}(e).buffer}constructor(){this.encoder=new TextEncoder,this._pieces=[],this._parts=[]}}function i(e){return new s(e).unpack()}function o(e){let t=new a,n=t.pack(e);return n instanceof Promise?n.then(()=>t.getBuffer()):t.getBuffer()}class s{unpack(){let e;let t=this.unpack_uint8();if(t<128)return t;if((224^t)<32)return(224^t)-32;if((e=160^t)<=15)return this.unpack_raw(e);if((e=176^t)<=15)return this.unpack_string(e);if((e=144^t)<=15)return this.unpack_array(e);if((e=128^t)<=15)return this.unpack_map(e);switch(t){case 192:return null;case 193:case 212:case 213:case 214:case 215:return;case 194:return!1;case 195:return!0;case 202:return this.unpack_float();case 203:return this.unpack_double();case 204:return this.unpack_uint8();case 205:return this.unpack_uint16();case 206:return this.unpack_uint32();case 207:return this.unpack_uint64();case 208:return this.unpack_int8();case 209:return this.unpack_int16();case 210:return this.unpack_int32();case 211:return this.unpack_int64();case 216:return e=this.unpack_uint16(),this.unpack_string(e);case 217:return e=this.unpack_uint32(),this.unpack_string(e);case 218:return e=this.unpack_uint16(),this.unpack_raw(e);case 219:return e=this.unpack_uint32(),this.unpack_raw(e);case 220:return e=this.unpack_uint16(),this.unpack_array(e);case 221:return e=this.unpack_uint32(),this.unpack_array(e);case 222:return e=this.unpack_uint16(),this.unpack_map(e);case 223:return e=this.unpack_uint32(),this.unpack_map(e)}}unpack_uint8(){let e=255&this.dataView[this.index];return this.index++,e}unpack_uint16(){let e=this.read(2),t=(255&e[0])*256+(255&e[1]);return this.index+=2,t}unpack_uint32(){let e=this.read(4),t=((256*e[0]+e[1])*256+e[2])*256+e[3];return this.index+=4,t}unpack_uint64(){let e=this.read(8),t=((((((256*e[0]+e[1])*256+e[2])*256+e[3])*256+e[4])*256+e[5])*256+e[6])*256+e[7];return this.index+=8,t}unpack_int8(){let e=this.unpack_uint8();return e<128?e:e-256}unpack_int16(){let e=this.unpack_uint16();return e<32768?e:e-65536}unpack_int32(){let e=this.unpack_uint32();return e<2147483648?e:e-4294967296}unpack_int64(){let e=this.unpack_uint64();return e<0x7fffffffffffffff?e:e-18446744073709552e3}unpack_raw(e){if(this.length<this.index+e)throw Error(`BinaryPackFailure: index is out of range ${this.index} ${e} ${this.length}`);let t=this.dataBuffer.slice(this.index,this.index+e);return this.index+=e,t}unpack_string(e){let t,n;let r=this.read(e),i=0,o="";for(;i<e;)(t=r[i])<160?(n=t,i++):(192^t)<32?(n=(31&t)<<6|63&r[i+1],i+=2):(224^t)<16?(n=(15&t)<<12|(63&r[i+1])<<6|63&r[i+2],i+=3):(n=(7&t)<<18|(63&r[i+1])<<12|(63&r[i+2])<<6|63&r[i+3],i+=4),o+=String.fromCodePoint(n);return this.index+=e,o}unpack_array(e){let t=Array(e);for(let n=0;n<e;n++)t[n]=this.unpack();return t}unpack_map(e){let t={};for(let n=0;n<e;n++)t[this.unpack()]=this.unpack();return t}unpack_float(){let e=this.unpack_uint32();return(0==e>>31?1:-1)*(8388607&e|8388608)*2**((e>>23&255)-127-23)}unpack_double(){let e=this.unpack_uint32(),t=this.unpack_uint32(),n=(e>>20&2047)-1023;return(0==e>>31?1:-1)*((1048575&e|1048576)*2**(n-20)+t*2**(n-52))}read(e){let t=this.index;if(t+e<=this.length)return this.dataView.subarray(t,t+e);throw Error("BinaryPackFailure: read index out of range")}constructor(e){this.index=0,this.dataBuffer=e,this.dataView=new Uint8Array(this.dataBuffer),this.length=this.dataBuffer.byteLength}}class a{getBuffer(){return this._bufferBuilder.toArrayBuffer()}pack(e){if("string"==typeof e)this.pack_string(e);else if("number"==typeof e)Math.floor(e)===e?this.pack_integer(e):this.pack_double(e);else if("boolean"==typeof e)!0===e?this._bufferBuilder.append(195):!1===e&&this._bufferBuilder.append(194);else if(void 0===e)this._bufferBuilder.append(192);else if("object"==typeof e){if(null===e)this._bufferBuilder.append(192);else{let t=e.constructor;if(e instanceof Array){let t=this.pack_array(e);if(t instanceof Promise)return t.then(()=>this._bufferBuilder.flush())}else if(e instanceof ArrayBuffer)this.pack_bin(new Uint8Array(e));else if("BYTES_PER_ELEMENT"in e)this.pack_bin(new Uint8Array(e.buffer,e.byteOffset,e.byteLength));else if(e instanceof Date)this.pack_string(e.toString());else if(e instanceof Blob)return e.arrayBuffer().then(e=>{this.pack_bin(new Uint8Array(e)),this._bufferBuilder.flush()});else if(t==Object||t.toString().startsWith("class")){let t=this.pack_object(e);if(t instanceof Promise)return t.then(()=>this._bufferBuilder.flush())}else throw Error(`Type "${t.toString()}" not yet supported`)}}else throw Error(`Type "${typeof e}" not yet supported`);this._bufferBuilder.flush()}pack_bin(e){let t=e.length;if(t<=15)this.pack_uint8(160+t);else if(t<=65535)this._bufferBuilder.append(218),this.pack_uint16(t);else if(t<=4294967295)this._bufferBuilder.append(219),this.pack_uint32(t);else throw Error("Invalid length");this._bufferBuilder.append_buffer(e)}pack_string(e){let t=this._textEncoder.encode(e),n=t.length;if(n<=15)this.pack_uint8(176+n);else if(n<=65535)this._bufferBuilder.append(216),this.pack_uint16(n);else if(n<=4294967295)this._bufferBuilder.append(217),this.pack_uint32(n);else throw Error("Invalid length");this._bufferBuilder.append_buffer(t)}pack_array(e){let t=e.length;if(t<=15)this.pack_uint8(144+t);else if(t<=65535)this._bufferBuilder.append(220),this.pack_uint16(t);else if(t<=4294967295)this._bufferBuilder.append(221),this.pack_uint32(t);else throw Error("Invalid length");let n=r=>{if(r<t){let t=this.pack(e[r]);return t instanceof Promise?t.then(()=>n(r+1)):n(r+1)}};return n(0)}pack_integer(e){if(e>=-32&&e<=127)this._bufferBuilder.append(255&e);else if(e>=0&&e<=255)this._bufferBuilder.append(204),this.pack_uint8(e);else if(e>=-128&&e<=127)this._bufferBuilder.append(208),this.pack_int8(e);else if(e>=0&&e<=65535)this._bufferBuilder.append(205),this.pack_uint16(e);else if(e>=-32768&&e<=32767)this._bufferBuilder.append(209),this.pack_int16(e);else if(e>=0&&e<=4294967295)this._bufferBuilder.append(206),this.pack_uint32(e);else if(e>=-2147483648&&e<=2147483647)this._bufferBuilder.append(210),this.pack_int32(e);else if(e>=-0x8000000000000000&&e<=0x7fffffffffffffff)this._bufferBuilder.append(211),this.pack_int64(e);else if(e>=0&&e<=18446744073709552e3)this._bufferBuilder.append(207),this.pack_uint64(e);else throw Error("Invalid integer")}pack_double(e){let t=0;e<0&&(t=1,e=-e);let n=Math.floor(Math.log(e)/Math.LN2),r=Math.floor((e/2**n-1)*4503599627370496),i=t<<31|n+1023<<20|r/4294967296&1048575;this._bufferBuilder.append(203),this.pack_int32(i),this.pack_int32(r%4294967296)}pack_object(e){let t=Object.keys(e),n=t.length;if(n<=15)this.pack_uint8(128+n);else if(n<=65535)this._bufferBuilder.append(222),this.pack_uint16(n);else if(n<=4294967295)this._bufferBuilder.append(223),this.pack_uint32(n);else throw Error("Invalid length");let r=n=>{if(n<t.length){let i=t[n];if(e.hasOwnProperty(i)){this.pack(i);let t=this.pack(e[i]);if(t instanceof Promise)return t.then(()=>r(n+1))}return r(n+1)}};return r(0)}pack_uint8(e){this._bufferBuilder.append(e)}pack_uint16(e){this._bufferBuilder.append(e>>8),this._bufferBuilder.append(255&e)}pack_uint32(e){let t=4294967295&e;this._bufferBuilder.append((4278190080&t)>>>24),this._bufferBuilder.append((16711680&t)>>>16),this._bufferBuilder.append((65280&t)>>>8),this._bufferBuilder.append(255&t)}pack_uint64(e){let t=e/4294967296,n=e%4294967296;this._bufferBuilder.append((4278190080&t)>>>24),this._bufferBuilder.append((16711680&t)>>>16),this._bufferBuilder.append((65280&t)>>>8),this._bufferBuilder.append(255&t),this._bufferBuilder.append((4278190080&n)>>>24),this._bufferBuilder.append((16711680&n)>>>16),this._bufferBuilder.append((65280&n)>>>8),this._bufferBuilder.append(255&n)}pack_int8(e){this._bufferBuilder.append(255&e)}pack_int16(e){this._bufferBuilder.append((65280&e)>>8),this._bufferBuilder.append(255&e)}pack_int32(e){this._bufferBuilder.append(e>>>24&255),this._bufferBuilder.append((16711680&e)>>>16),this._bufferBuilder.append((65280&e)>>>8),this._bufferBuilder.append(255&e)}pack_int64(e){let t=Math.floor(e/4294967296),n=e%4294967296;this._bufferBuilder.append((4278190080&t)>>>24),this._bufferBuilder.append((16711680&t)>>>16),this._bufferBuilder.append((65280&t)>>>8),this._bufferBuilder.append(255&t),this._bufferBuilder.append((4278190080&n)>>>24),this._bufferBuilder.append((16711680&n)>>>16),this._bufferBuilder.append((65280&n)>>>8),this._bufferBuilder.append(255&n)}constructor(){this._bufferBuilder=new r,this._textEncoder=new TextEncoder}}let c=!0,l=!0;function p(e,t,n){let r=e.match(t);return r&&r.length>=n&&parseInt(r[n],10)}function d(e,t,n){if(!e.RTCPeerConnection)return;let r=e.RTCPeerConnection.prototype,i=r.addEventListener;r.addEventListener=function(e,r){if(e!==t)return i.apply(this,arguments);let o=e=>{let t=n(e);t&&(r.handleEvent?r.handleEvent(t):r(t))};return this._eventMap=this._eventMap||{},this._eventMap[t]||(this._eventMap[t]=new Map),this._eventMap[t].set(r,o),i.apply(this,[e,o])};let o=r.removeEventListener;r.removeEventListener=function(e,n){if(e!==t||!this._eventMap||!this._eventMap[t]||!this._eventMap[t].has(n))return o.apply(this,arguments);let r=this._eventMap[t].get(n);return this._eventMap[t].delete(n),0===this._eventMap[t].size&&delete this._eventMap[t],0===Object.keys(this._eventMap).length&&delete this._eventMap,o.apply(this,[e,r])},Object.defineProperty(r,"on"+t,{get(){return this["_on"+t]},set(e){this["_on"+t]&&(this.removeEventListener(t,this["_on"+t]),delete this["_on"+t]),e&&this.addEventListener(t,this["_on"+t]=e)},enumerable:!0,configurable:!0})}function h(e){return"boolean"!=typeof e?Error("Argument type: "+typeof e+". Please use a boolean."):(c=e,e?"adapter.js logging disabled":"adapter.js logging enabled")}function u(e){return"boolean"!=typeof e?Error("Argument type: "+typeof e+". Please use a boolean."):(l=!e,"adapter.js deprecation warnings "+(e?"disabled":"enabled"))}function f(){"object"!=typeof window||c||"undefined"==typeof console||"function"!=typeof console.log||console.log.apply(console,arguments)}function m(e,t){l&&console.warn(e+" is deprecated, please use "+t+" instead.")}function g(e){return"[object Object]"===Object.prototype.toString.call(e)}function y(e,t,n){let r=n?"outbound-rtp":"inbound-rtp",i=new Map;if(null===t)return i;let o=[];return e.forEach(e=>{"track"===e.type&&e.trackIdentifier===t.id&&o.push(e)}),o.forEach(t=>{e.forEach(n=>{n.type===r&&n.trackId===t.id&&function e(t,n,r){!n||r.has(n.id)||(r.set(n.id,n),Object.keys(n).forEach(i=>{i.endsWith("Id")?e(t,t.get(n[i]),r):i.endsWith("Ids")&&n[i].forEach(n=>{e(t,t.get(n),r)})}))}(e,n,i)})}),i}var _,C,b,v,k,T,S,R,P,w,E,D,x,I,M,O,j={};function L(e,t){let n=e&&e.navigator;if(!n.mediaDevices)return;let r=function(e){if("object"!=typeof e||e.mandatory||e.optional)return e;let t={};return Object.keys(e).forEach(n=>{if("require"===n||"advanced"===n||"mediaSource"===n)return;let r="object"==typeof e[n]?e[n]:{ideal:e[n]};void 0!==r.exact&&"number"==typeof r.exact&&(r.min=r.max=r.exact);let i=function(e,t){return e?e+t.charAt(0).toUpperCase()+t.slice(1):"deviceId"===t?"sourceId":t};if(void 0!==r.ideal){t.optional=t.optional||[];let e={};"number"==typeof r.ideal?(e[i("min",n)]=r.ideal,t.optional.push(e),(e={})[i("max",n)]=r.ideal):e[i("",n)]=r.ideal,t.optional.push(e)}void 0!==r.exact&&"number"!=typeof r.exact?(t.mandatory=t.mandatory||{},t.mandatory[i("",n)]=r.exact):["min","max"].forEach(e=>{void 0!==r[e]&&(t.mandatory=t.mandatory||{},t.mandatory[i(e,n)]=r[e])})}),e.advanced&&(t.optional=(t.optional||[]).concat(e.advanced)),t},i=function(e,i){if(t.version>=61)return i(e);if((e=JSON.parse(JSON.stringify(e)))&&"object"==typeof e.audio){let t=function(e,t,n){t in e&&!(n in e)&&(e[n]=e[t],delete e[t])};t((e=JSON.parse(JSON.stringify(e))).audio,"autoGainControl","googAutoGainControl"),t(e.audio,"noiseSuppression","googNoiseSuppression"),e.audio=r(e.audio)}if(e&&"object"==typeof e.video){let o=e.video.facingMode;o=o&&("object"==typeof o?o:{ideal:o});let s=t.version<66;if(o&&("user"===o.exact||"environment"===o.exact||"user"===o.ideal||"environment"===o.ideal)&&!(n.mediaDevices.getSupportedConstraints&&n.mediaDevices.getSupportedConstraints().facingMode&&!s)){let t;if(delete e.video.facingMode,"environment"===o.exact||"environment"===o.ideal?t=["back","rear"]:("user"===o.exact||"user"===o.ideal)&&(t=["front"]),t)return n.mediaDevices.enumerateDevices().then(n=>{let s=(n=n.filter(e=>"videoinput"===e.kind)).find(e=>t.some(t=>e.label.toLowerCase().includes(t)));return!s&&n.length&&t.includes("back")&&(s=n[n.length-1]),s&&(e.video.deviceId=o.exact?{exact:s.deviceId}:{ideal:s.deviceId}),e.video=r(e.video),f("chrome: "+JSON.stringify(e)),i(e)})}e.video=r(e.video)}return f("chrome: "+JSON.stringify(e)),i(e)},o=function(e){return t.version>=64?e:{name:({PermissionDeniedError:"NotAllowedError",PermissionDismissedError:"NotAllowedError",InvalidStateError:"NotAllowedError",DevicesNotFoundError:"NotFoundError",ConstraintNotSatisfiedError:"OverconstrainedError",TrackStartError:"NotReadableError",MediaDeviceFailedDueToShutdown:"NotAllowedError",MediaDeviceKillSwitchOn:"NotAllowedError",TabCaptureError:"AbortError",ScreenCaptureError:"AbortError",DeviceCaptureError:"AbortError"})[e.name]||e.name,message:e.message,constraint:e.constraint||e.constraintName,toString(){return this.name+(this.message&&": ")+this.message}}};if(n.getUserMedia=(function(e,t,r){i(e,e=>{n.webkitGetUserMedia(e,t,e=>{r&&r(o(e))})})}).bind(n),n.mediaDevices.getUserMedia){let e=n.mediaDevices.getUserMedia.bind(n.mediaDevices);n.mediaDevices.getUserMedia=function(t){return i(t,t=>e(t).then(e=>{if(t.audio&&!e.getAudioTracks().length||t.video&&!e.getVideoTracks().length)throw e.getTracks().forEach(e=>{e.stop()}),new DOMException("","NotFoundError");return e},e=>Promise.reject(o(e))))}}}function A(e){e.MediaStream=e.MediaStream||e.webkitMediaStream}function B(e){if("object"!=typeof e||!e.RTCPeerConnection||"ontrack"in e.RTCPeerConnection.prototype)d(e,"track",e=>(e.transceiver||Object.defineProperty(e,"transceiver",{value:{receiver:e.receiver}}),e));else{Object.defineProperty(e.RTCPeerConnection.prototype,"ontrack",{get(){return this._ontrack},set(e){this._ontrack&&this.removeEventListener("track",this._ontrack),this.addEventListener("track",this._ontrack=e)},enumerable:!0,configurable:!0});let t=e.RTCPeerConnection.prototype.setRemoteDescription;e.RTCPeerConnection.prototype.setRemoteDescription=function(){return this._ontrackpoly||(this._ontrackpoly=t=>{t.stream.addEventListener("addtrack",n=>{let r;r=e.RTCPeerConnection.prototype.getReceivers?this.getReceivers().find(e=>e.track&&e.track.id===n.track.id):{track:n.track};let i=new Event("track");i.track=n.track,i.receiver=r,i.transceiver={receiver:r},i.streams=[t.stream],this.dispatchEvent(i)}),t.stream.getTracks().forEach(n=>{let r;r=e.RTCPeerConnection.prototype.getReceivers?this.getReceivers().find(e=>e.track&&e.track.id===n.id):{track:n};let i=new Event("track");i.track=n,i.receiver=r,i.transceiver={receiver:r},i.streams=[t.stream],this.dispatchEvent(i)})},this.addEventListener("addstream",this._ontrackpoly)),t.apply(this,arguments)}}}function F(e){if("object"==typeof e&&e.RTCPeerConnection&&!("getSenders"in e.RTCPeerConnection.prototype)&&"createDTMFSender"in e.RTCPeerConnection.prototype){let t=function(e,t){return{track:t,get dtmf(){return void 0===this._dtmf&&("audio"===t.kind?this._dtmf=e.createDTMFSender(t):this._dtmf=null),this._dtmf},_pc:e}};if(!e.RTCPeerConnection.prototype.getSenders){e.RTCPeerConnection.prototype.getSenders=function(){return this._senders=this._senders||[],this._senders.slice()};let n=e.RTCPeerConnection.prototype.addTrack;e.RTCPeerConnection.prototype.addTrack=function(e,r){let i=n.apply(this,arguments);return i||(i=t(this,e),this._senders.push(i)),i};let r=e.RTCPeerConnection.prototype.removeTrack;e.RTCPeerConnection.prototype.removeTrack=function(e){r.apply(this,arguments);let t=this._senders.indexOf(e);-1!==t&&this._senders.splice(t,1)}}let n=e.RTCPeerConnection.prototype.addStream;e.RTCPeerConnection.prototype.addStream=function(e){this._senders=this._senders||[],n.apply(this,[e]),e.getTracks().forEach(e=>{this._senders.push(t(this,e))})};let r=e.RTCPeerConnection.prototype.removeStream;e.RTCPeerConnection.prototype.removeStream=function(e){this._senders=this._senders||[],r.apply(this,[e]),e.getTracks().forEach(e=>{let t=this._senders.find(t=>t.track===e);t&&this._senders.splice(this._senders.indexOf(t),1)})}}else if("object"==typeof e&&e.RTCPeerConnection&&"getSenders"in e.RTCPeerConnection.prototype&&"createDTMFSender"in e.RTCPeerConnection.prototype&&e.RTCRtpSender&&!("dtmf"in e.RTCRtpSender.prototype)){let t=e.RTCPeerConnection.prototype.getSenders;e.RTCPeerConnection.prototype.getSenders=function(){let e=t.apply(this,[]);return e.forEach(e=>e._pc=this),e},Object.defineProperty(e.RTCRtpSender.prototype,"dtmf",{get(){return void 0===this._dtmf&&("audio"===this.track.kind?this._dtmf=this._pc.createDTMFSender(this.track):this._dtmf=null),this._dtmf}})}}function U(e){if(!("object"==typeof e&&e.RTCPeerConnection&&e.RTCRtpSender&&e.RTCRtpReceiver))return;if(!("getStats"in e.RTCRtpSender.prototype)){let t=e.RTCPeerConnection.prototype.getSenders;t&&(e.RTCPeerConnection.prototype.getSenders=function(){let e=t.apply(this,[]);return e.forEach(e=>e._pc=this),e});let n=e.RTCPeerConnection.prototype.addTrack;n&&(e.RTCPeerConnection.prototype.addTrack=function(){let e=n.apply(this,arguments);return e._pc=this,e}),e.RTCRtpSender.prototype.getStats=function(){let e=this;return this._pc.getStats().then(t=>y(t,e.track,!0))}}if(!("getStats"in e.RTCRtpReceiver.prototype)){let t=e.RTCPeerConnection.prototype.getReceivers;t&&(e.RTCPeerConnection.prototype.getReceivers=function(){let e=t.apply(this,[]);return e.forEach(e=>e._pc=this),e}),d(e,"track",e=>(e.receiver._pc=e.srcElement,e)),e.RTCRtpReceiver.prototype.getStats=function(){let e=this;return this._pc.getStats().then(t=>y(t,e.track,!1))}}if(!("getStats"in e.RTCRtpSender.prototype&&"getStats"in e.RTCRtpReceiver.prototype))return;let t=e.RTCPeerConnection.prototype.getStats;e.RTCPeerConnection.prototype.getStats=function(){if(arguments.length>0&&arguments[0]instanceof e.MediaStreamTrack){let e,t,n;let r=arguments[0];return(this.getSenders().forEach(t=>{t.track===r&&(e?n=!0:e=t)}),this.getReceivers().forEach(e=>(e.track===r&&(t?n=!0:t=e),e.track===r)),n||e&&t)?Promise.reject(new DOMException("There are more than one sender or receiver for the track.","InvalidAccessError")):e?e.getStats():t?t.getStats():Promise.reject(new DOMException("There is no sender or receiver for the track.","InvalidAccessError"))}return t.apply(this,arguments)}}function z(e){e.RTCPeerConnection.prototype.getLocalStreams=function(){return this._shimmedLocalStreams=this._shimmedLocalStreams||{},Object.keys(this._shimmedLocalStreams).map(e=>this._shimmedLocalStreams[e][0])};let t=e.RTCPeerConnection.prototype.addTrack;e.RTCPeerConnection.prototype.addTrack=function(e,n){if(!n)return t.apply(this,arguments);this._shimmedLocalStreams=this._shimmedLocalStreams||{};let r=t.apply(this,arguments);return this._shimmedLocalStreams[n.id]?-1===this._shimmedLocalStreams[n.id].indexOf(r)&&this._shimmedLocalStreams[n.id].push(r):this._shimmedLocalStreams[n.id]=[n,r],r};let n=e.RTCPeerConnection.prototype.addStream;e.RTCPeerConnection.prototype.addStream=function(e){this._shimmedLocalStreams=this._shimmedLocalStreams||{},e.getTracks().forEach(e=>{if(this.getSenders().find(t=>t.track===e))throw new DOMException("Track already exists.","InvalidAccessError")});let t=this.getSenders();n.apply(this,arguments);let r=this.getSenders().filter(e=>-1===t.indexOf(e));this._shimmedLocalStreams[e.id]=[e].concat(r)};let r=e.RTCPeerConnection.prototype.removeStream;e.RTCPeerConnection.prototype.removeStream=function(e){return this._shimmedLocalStreams=this._shimmedLocalStreams||{},delete this._shimmedLocalStreams[e.id],r.apply(this,arguments)};let i=e.RTCPeerConnection.prototype.removeTrack;e.RTCPeerConnection.prototype.removeTrack=function(e){return this._shimmedLocalStreams=this._shimmedLocalStreams||{},e&&Object.keys(this._shimmedLocalStreams).forEach(t=>{let n=this._shimmedLocalStreams[t].indexOf(e);-1!==n&&this._shimmedLocalStreams[t].splice(n,1),1===this._shimmedLocalStreams[t].length&&delete this._shimmedLocalStreams[t]}),i.apply(this,arguments)}}function N(e,t){if(!e.RTCPeerConnection)return;if(e.RTCPeerConnection.prototype.addTrack&&t.version>=65)return z(e);let n=e.RTCPeerConnection.prototype.getLocalStreams;e.RTCPeerConnection.prototype.getLocalStreams=function(){let e=n.apply(this);return this._reverseStreams=this._reverseStreams||{},e.map(e=>this._reverseStreams[e.id])};let r=e.RTCPeerConnection.prototype.addStream;e.RTCPeerConnection.prototype.addStream=function(t){if(this._streams=this._streams||{},this._reverseStreams=this._reverseStreams||{},t.getTracks().forEach(e=>{if(this.getSenders().find(t=>t.track===e))throw new DOMException("Track already exists.","InvalidAccessError")}),!this._reverseStreams[t.id]){let n=new e.MediaStream(t.getTracks());this._streams[t.id]=n,this._reverseStreams[n.id]=t,t=n}r.apply(this,[t])};let i=e.RTCPeerConnection.prototype.removeStream;function o(e,t){let n=t.sdp;return Object.keys(e._reverseStreams||[]).forEach(t=>{let r=e._reverseStreams[t],i=e._streams[r.id];n=n.replace(RegExp(i.id,"g"),r.id)}),new RTCSessionDescription({type:t.type,sdp:n})}e.RTCPeerConnection.prototype.removeStream=function(e){this._streams=this._streams||{},this._reverseStreams=this._reverseStreams||{},i.apply(this,[this._streams[e.id]||e]),delete this._reverseStreams[this._streams[e.id]?this._streams[e.id].id:e.id],delete this._streams[e.id]},e.RTCPeerConnection.prototype.addTrack=function(t,n){if("closed"===this.signalingState)throw new DOMException("The RTCPeerConnection's signalingState is 'closed'.","InvalidStateError");let r=[].slice.call(arguments,1);if(1!==r.length||!r[0].getTracks().find(e=>e===t))throw new DOMException("The adapter.js addTrack polyfill only supports a single  stream which is associated with the specified track.","NotSupportedError");if(this.getSenders().find(e=>e.track===t))throw new DOMException("Track already exists.","InvalidAccessError");this._streams=this._streams||{},this._reverseStreams=this._reverseStreams||{};let i=this._streams[n.id];if(i)i.addTrack(t),Promise.resolve().then(()=>{this.dispatchEvent(new Event("negotiationneeded"))});else{let r=new e.MediaStream([t]);this._streams[n.id]=r,this._reverseStreams[r.id]=n,this.addStream(r)}return this.getSenders().find(e=>e.track===t)},["createOffer","createAnswer"].forEach(function(t){let n=e.RTCPeerConnection.prototype[t];e.RTCPeerConnection.prototype[t]=({[t](){let e=arguments,t=arguments.length&&"function"==typeof arguments[0];return t?n.apply(this,[t=>{let n=o(this,t);e[0].apply(null,[n])},t=>{e[1]&&e[1].apply(null,t)},arguments[2]]):n.apply(this,arguments).then(e=>o(this,e))}})[t]});let s=e.RTCPeerConnection.prototype.setLocalDescription;e.RTCPeerConnection.prototype.setLocalDescription=function(){var e,t;let n;return arguments.length&&arguments[0].type&&(arguments[0]=(e=this,t=arguments[0],n=t.sdp,Object.keys(e._reverseStreams||[]).forEach(t=>{let r=e._reverseStreams[t],i=e._streams[r.id];n=n.replace(RegExp(r.id,"g"),i.id)}),new RTCSessionDescription({type:t.type,sdp:n}))),s.apply(this,arguments)};let a=Object.getOwnPropertyDescriptor(e.RTCPeerConnection.prototype,"localDescription");Object.defineProperty(e.RTCPeerConnection.prototype,"localDescription",{get(){let e=a.get.apply(this);return""===e.type?e:o(this,e)}}),e.RTCPeerConnection.prototype.removeTrack=function(e){let t;if("closed"===this.signalingState)throw new DOMException("The RTCPeerConnection's signalingState is 'closed'.","InvalidStateError");if(!e._pc)throw new DOMException("Argument 1 of RTCPeerConnection.removeTrack does not implement interface RTCRtpSender.","TypeError");if(e._pc!==this)throw new DOMException("Sender was not created by this connection.","InvalidAccessError");this._streams=this._streams||{},Object.keys(this._streams).forEach(n=>{this._streams[n].getTracks().find(t=>e.track===t)&&(t=this._streams[n])}),t&&(1===t.getTracks().length?this.removeStream(this._reverseStreams[t.id]):t.removeTrack(e.track),this.dispatchEvent(new Event("negotiationneeded")))}}function $(e,t){!e.RTCPeerConnection&&e.webkitRTCPeerConnection&&(e.RTCPeerConnection=e.webkitRTCPeerConnection),e.RTCPeerConnection&&t.version<53&&["setLocalDescription","setRemoteDescription","addIceCandidate"].forEach(function(t){let n=e.RTCPeerConnection.prototype[t];e.RTCPeerConnection.prototype[t]=({[t](){return arguments[0]=new("addIceCandidate"===t?e.RTCIceCandidate:e.RTCSessionDescription)(arguments[0]),n.apply(this,arguments)}})[t]})}function J(e,t){d(e,"negotiationneeded",e=>{let n=e.target;if(!(t.version<72)&&(!n.getConfiguration||"plan-b"!==n.getConfiguration().sdpSemantics)||"stable"===n.signalingState)return e})}e(j,"shimMediaStream",()=>A),e(j,"shimOnTrack",()=>B),e(j,"shimGetSendersWithDtmf",()=>F),e(j,"shimSenderReceiverGetStats",()=>U),e(j,"shimAddTrackRemoveTrackWithNative",()=>z),e(j,"shimAddTrackRemoveTrack",()=>N),e(j,"shimPeerConnection",()=>$),e(j,"fixNegotiationNeeded",()=>J),e(j,"shimGetUserMedia",()=>L);var V={};function G(e,t){let n=e&&e.navigator,r=e&&e.MediaStreamTrack;if(n.getUserMedia=function(e,t,r){m("navigator.getUserMedia","navigator.mediaDevices.getUserMedia"),n.mediaDevices.getUserMedia(e).then(t,r)},!(t.version>55&&"autoGainControl"in n.mediaDevices.getSupportedConstraints())){let e=function(e,t,n){t in e&&!(n in e)&&(e[n]=e[t],delete e[t])},t=n.mediaDevices.getUserMedia.bind(n.mediaDevices);if(n.mediaDevices.getUserMedia=function(n){return"object"==typeof n&&"object"==typeof n.audio&&(e((n=JSON.parse(JSON.stringify(n))).audio,"autoGainControl","mozAutoGainControl"),e(n.audio,"noiseSuppression","mozNoiseSuppression")),t(n)},r&&r.prototype.getSettings){let t=r.prototype.getSettings;r.prototype.getSettings=function(){let n=t.apply(this,arguments);return e(n,"mozAutoGainControl","autoGainControl"),e(n,"mozNoiseSuppression","noiseSuppression"),n}}if(r&&r.prototype.applyConstraints){let t=r.prototype.applyConstraints;r.prototype.applyConstraints=function(n){return"audio"===this.kind&&"object"==typeof n&&(e(n=JSON.parse(JSON.stringify(n)),"autoGainControl","mozAutoGainControl"),e(n,"noiseSuppression","mozNoiseSuppression")),t.apply(this,[n])}}}}function W(e,t){e.navigator.mediaDevices&&"getDisplayMedia"in e.navigator.mediaDevices||!e.navigator.mediaDevices||(e.navigator.mediaDevices.getDisplayMedia=function(n){if(!(n&&n.video)){let e=new DOMException("getDisplayMedia without video constraints is undefined");return e.name="NotFoundError",e.code=8,Promise.reject(e)}return!0===n.video?n.video={mediaSource:t}:n.video.mediaSource=t,e.navigator.mediaDevices.getUserMedia(n)})}function H(e){"object"==typeof e&&e.RTCTrackEvent&&"receiver"in e.RTCTrackEvent.prototype&&!("transceiver"in e.RTCTrackEvent.prototype)&&Object.defineProperty(e.RTCTrackEvent.prototype,"transceiver",{get(){return{receiver:this.receiver}}})}function Y(e,t){if("object"!=typeof e||!(e.RTCPeerConnection||e.mozRTCPeerConnection))return;!e.RTCPeerConnection&&e.mozRTCPeerConnection&&(e.RTCPeerConnection=e.mozRTCPeerConnection),t.version<53&&["setLocalDescription","setRemoteDescription","addIceCandidate"].forEach(function(t){let n=e.RTCPeerConnection.prototype[t];e.RTCPeerConnection.prototype[t]=({[t](){return arguments[0]=new("addIceCandidate"===t?e.RTCIceCandidate:e.RTCSessionDescription)(arguments[0]),n.apply(this,arguments)}})[t]});let n={inboundrtp:"inbound-rtp",outboundrtp:"outbound-rtp",candidatepair:"candidate-pair",localcandidate:"local-candidate",remotecandidate:"remote-candidate"},r=e.RTCPeerConnection.prototype.getStats;e.RTCPeerConnection.prototype.getStats=function(){let[e,i,o]=arguments;return r.apply(this,[e||null]).then(e=>{if(t.version<53&&!i)try{e.forEach(e=>{e.type=n[e.type]||e.type})}catch(t){if("TypeError"!==t.name)throw t;e.forEach((t,r)=>{e.set(r,Object.assign({},t,{type:n[t.type]||t.type}))})}return e}).then(i,o)}}function K(e){if(!("object"==typeof e&&e.RTCPeerConnection&&e.RTCRtpSender)||e.RTCRtpSender&&"getStats"in e.RTCRtpSender.prototype)return;let t=e.RTCPeerConnection.prototype.getSenders;t&&(e.RTCPeerConnection.prototype.getSenders=function(){let e=t.apply(this,[]);return e.forEach(e=>e._pc=this),e});let n=e.RTCPeerConnection.prototype.addTrack;n&&(e.RTCPeerConnection.prototype.addTrack=function(){let e=n.apply(this,arguments);return e._pc=this,e}),e.RTCRtpSender.prototype.getStats=function(){return this.track?this._pc.getStats(this.track):Promise.resolve(new Map)}}function X(e){if(!("object"==typeof e&&e.RTCPeerConnection&&e.RTCRtpSender)||e.RTCRtpSender&&"getStats"in e.RTCRtpReceiver.prototype)return;let t=e.RTCPeerConnection.prototype.getReceivers;t&&(e.RTCPeerConnection.prototype.getReceivers=function(){let e=t.apply(this,[]);return e.forEach(e=>e._pc=this),e}),d(e,"track",e=>(e.receiver._pc=e.srcElement,e)),e.RTCRtpReceiver.prototype.getStats=function(){return this._pc.getStats(this.track)}}function q(e){!e.RTCPeerConnection||"removeStream"in e.RTCPeerConnection.prototype||(e.RTCPeerConnection.prototype.removeStream=function(e){m("removeStream","removeTrack"),this.getSenders().forEach(t=>{t.track&&e.getTracks().includes(t.track)&&this.removeTrack(t)})})}function Q(e){e.DataChannel&&!e.RTCDataChannel&&(e.RTCDataChannel=e.DataChannel)}function Z(e){if(!("object"==typeof e&&e.RTCPeerConnection))return;let t=e.RTCPeerConnection.prototype.addTransceiver;t&&(e.RTCPeerConnection.prototype.addTransceiver=function(){this.setParametersPromises=[];let e=arguments[1]&&arguments[1].sendEncodings;void 0===e&&(e=[]);let n=(e=[...e]).length>0;n&&e.forEach(e=>{if("rid"in e&&!/^[a-z0-9]{0,16}$/i.test(e.rid))throw TypeError("Invalid RID value provided.");if("scaleResolutionDownBy"in e&&!(parseFloat(e.scaleResolutionDownBy)>=1))throw RangeError("scale_resolution_down_by must be >= 1.0");if("maxFramerate"in e&&!(parseFloat(e.maxFramerate)>=0))throw RangeError("max_framerate must be >= 0.0")});let r=t.apply(this,arguments);if(n){let{sender:t}=r,n=t.getParameters();"encodings"in n&&(1!==n.encodings.length||0!==Object.keys(n.encodings[0]).length)||(n.encodings=e,t.sendEncodings=e,this.setParametersPromises.push(t.setParameters(n).then(()=>{delete t.sendEncodings}).catch(()=>{delete t.sendEncodings})))}return r})}function ee(e){if(!("object"==typeof e&&e.RTCRtpSender))return;let t=e.RTCRtpSender.prototype.getParameters;t&&(e.RTCRtpSender.prototype.getParameters=function(){let e=t.apply(this,arguments);return"encodings"in e||(e.encodings=[].concat(this.sendEncodings||[{}])),e})}function et(e){if(!("object"==typeof e&&e.RTCPeerConnection))return;let t=e.RTCPeerConnection.prototype.createOffer;e.RTCPeerConnection.prototype.createOffer=function(){return this.setParametersPromises&&this.setParametersPromises.length?Promise.all(this.setParametersPromises).then(()=>t.apply(this,arguments)).finally(()=>{this.setParametersPromises=[]}):t.apply(this,arguments)}}function en(e){if(!("object"==typeof e&&e.RTCPeerConnection))return;let t=e.RTCPeerConnection.prototype.createAnswer;e.RTCPeerConnection.prototype.createAnswer=function(){return this.setParametersPromises&&this.setParametersPromises.length?Promise.all(this.setParametersPromises).then(()=>t.apply(this,arguments)).finally(()=>{this.setParametersPromises=[]}):t.apply(this,arguments)}}e(V,"shimOnTrack",()=>H),e(V,"shimPeerConnection",()=>Y),e(V,"shimSenderGetStats",()=>K),e(V,"shimReceiverGetStats",()=>X),e(V,"shimRemoveStream",()=>q),e(V,"shimRTCDataChannel",()=>Q),e(V,"shimAddTransceiver",()=>Z),e(V,"shimGetParameters",()=>ee),e(V,"shimCreateOffer",()=>et),e(V,"shimCreateAnswer",()=>en),e(V,"shimGetUserMedia",()=>G),e(V,"shimGetDisplayMedia",()=>W);var er={};function ei(e){if("object"==typeof e&&e.RTCPeerConnection){if("getLocalStreams"in e.RTCPeerConnection.prototype||(e.RTCPeerConnection.prototype.getLocalStreams=function(){return this._localStreams||(this._localStreams=[]),this._localStreams}),!("addStream"in e.RTCPeerConnection.prototype)){let t=e.RTCPeerConnection.prototype.addTrack;e.RTCPeerConnection.prototype.addStream=function(e){this._localStreams||(this._localStreams=[]),this._localStreams.includes(e)||this._localStreams.push(e),e.getAudioTracks().forEach(n=>t.call(this,n,e)),e.getVideoTracks().forEach(n=>t.call(this,n,e))},e.RTCPeerConnection.prototype.addTrack=function(e,...n){return n&&n.forEach(e=>{this._localStreams?this._localStreams.includes(e)||this._localStreams.push(e):this._localStreams=[e]}),t.apply(this,arguments)}}"removeStream"in e.RTCPeerConnection.prototype||(e.RTCPeerConnection.prototype.removeStream=function(e){this._localStreams||(this._localStreams=[]);let t=this._localStreams.indexOf(e);if(-1===t)return;this._localStreams.splice(t,1);let n=e.getTracks();this.getSenders().forEach(e=>{n.includes(e.track)&&this.removeTrack(e)})})}}function eo(e){if("object"==typeof e&&e.RTCPeerConnection&&("getRemoteStreams"in e.RTCPeerConnection.prototype||(e.RTCPeerConnection.prototype.getRemoteStreams=function(){return this._remoteStreams?this._remoteStreams:[]}),!("onaddstream"in e.RTCPeerConnection.prototype))){Object.defineProperty(e.RTCPeerConnection.prototype,"onaddstream",{get(){return this._onaddstream},set(e){this._onaddstream&&(this.removeEventListener("addstream",this._onaddstream),this.removeEventListener("track",this._onaddstreampoly)),this.addEventListener("addstream",this._onaddstream=e),this.addEventListener("track",this._onaddstreampoly=e=>{e.streams.forEach(e=>{if(this._remoteStreams||(this._remoteStreams=[]),this._remoteStreams.includes(e))return;this._remoteStreams.push(e);let t=new Event("addstream");t.stream=e,this.dispatchEvent(t)})})}});let t=e.RTCPeerConnection.prototype.setRemoteDescription;e.RTCPeerConnection.prototype.setRemoteDescription=function(){let e=this;return this._onaddstreampoly||this.addEventListener("track",this._onaddstreampoly=function(t){t.streams.forEach(t=>{if(e._remoteStreams||(e._remoteStreams=[]),e._remoteStreams.indexOf(t)>=0)return;e._remoteStreams.push(t);let n=new Event("addstream");n.stream=t,e.dispatchEvent(n)})}),t.apply(e,arguments)}}}function es(e){if("object"!=typeof e||!e.RTCPeerConnection)return;let t=e.RTCPeerConnection.prototype,n=t.createOffer,r=t.createAnswer,i=t.setLocalDescription,o=t.setRemoteDescription,s=t.addIceCandidate;t.createOffer=function(e,t){let r=arguments.length>=2?arguments[2]:arguments[0],i=n.apply(this,[r]);return t?(i.then(e,t),Promise.resolve()):i},t.createAnswer=function(e,t){let n=arguments.length>=2?arguments[2]:arguments[0],i=r.apply(this,[n]);return t?(i.then(e,t),Promise.resolve()):i};let a=function(e,t,n){let r=i.apply(this,[e]);return n?(r.then(t,n),Promise.resolve()):r};t.setLocalDescription=a,a=function(e,t,n){let r=o.apply(this,[e]);return n?(r.then(t,n),Promise.resolve()):r},t.setRemoteDescription=a,a=function(e,t,n){let r=s.apply(this,[e]);return n?(r.then(t,n),Promise.resolve()):r},t.addIceCandidate=a}function ea(e){let t=e&&e.navigator;if(t.mediaDevices&&t.mediaDevices.getUserMedia){let e=t.mediaDevices,n=e.getUserMedia.bind(e);t.mediaDevices.getUserMedia=e=>n(ec(e))}!t.getUserMedia&&t.mediaDevices&&t.mediaDevices.getUserMedia&&(t.getUserMedia=(function(e,n,r){t.mediaDevices.getUserMedia(e).then(n,r)}).bind(t))}function ec(e){return e&&void 0!==e.video?Object.assign({},e,{video:function e(t){return g(t)?Object.keys(t).reduce(function(n,r){let i=g(t[r]),o=i?e(t[r]):t[r],s=i&&!Object.keys(o).length;return void 0===o||s?n:Object.assign(n,{[r]:o})},{}):t}(e.video)}):e}function el(e){if(!e.RTCPeerConnection)return;let t=e.RTCPeerConnection;e.RTCPeerConnection=function(e,n){if(e&&e.iceServers){let t=[];for(let n=0;n<e.iceServers.length;n++){let r=e.iceServers[n];void 0===r.urls&&r.url?(m("RTCIceServer.url","RTCIceServer.urls"),(r=JSON.parse(JSON.stringify(r))).urls=r.url,delete r.url,t.push(r)):t.push(e.iceServers[n])}e.iceServers=t}return new t(e,n)},e.RTCPeerConnection.prototype=t.prototype,"generateCertificate"in t&&Object.defineProperty(e.RTCPeerConnection,"generateCertificate",{get:()=>t.generateCertificate})}function ep(e){"object"==typeof e&&e.RTCTrackEvent&&"receiver"in e.RTCTrackEvent.prototype&&!("transceiver"in e.RTCTrackEvent.prototype)&&Object.defineProperty(e.RTCTrackEvent.prototype,"transceiver",{get(){return{receiver:this.receiver}}})}function ed(e){let t=e.RTCPeerConnection.prototype.createOffer;e.RTCPeerConnection.prototype.createOffer=function(e){if(e){void 0!==e.offerToReceiveAudio&&(e.offerToReceiveAudio=!!e.offerToReceiveAudio);let t=this.getTransceivers().find(e=>"audio"===e.receiver.track.kind);!1===e.offerToReceiveAudio&&t?"sendrecv"===t.direction?t.setDirection?t.setDirection("sendonly"):t.direction="sendonly":"recvonly"===t.direction&&(t.setDirection?t.setDirection("inactive"):t.direction="inactive"):!0!==e.offerToReceiveAudio||t||this.addTransceiver("audio",{direction:"recvonly"}),void 0!==e.offerToReceiveVideo&&(e.offerToReceiveVideo=!!e.offerToReceiveVideo);let n=this.getTransceivers().find(e=>"video"===e.receiver.track.kind);!1===e.offerToReceiveVideo&&n?"sendrecv"===n.direction?n.setDirection?n.setDirection("sendonly"):n.direction="sendonly":"recvonly"===n.direction&&(n.setDirection?n.setDirection("inactive"):n.direction="inactive"):!0!==e.offerToReceiveVideo||n||this.addTransceiver("video",{direction:"recvonly"})}return t.apply(this,arguments)}}function eh(e){"object"!=typeof e||e.AudioContext||(e.AudioContext=e.webkitAudioContext)}e(er,"shimLocalStreamsAPI",()=>ei),e(er,"shimRemoteStreamsAPI",()=>eo),e(er,"shimCallbacksAPI",()=>es),e(er,"shimGetUserMedia",()=>ea),e(er,"shimConstraints",()=>ec),e(er,"shimRTCIceServerUrls",()=>el),e(er,"shimTrackEventTransceiver",()=>ep),e(er,"shimCreateOfferLegacy",()=>ed),e(er,"shimAudioContext",()=>eh);var eu={};e(eu,"shimRTCIceCandidate",()=>eg),e(eu,"shimRTCIceCandidateRelayProtocol",()=>ey),e(eu,"shimMaxMessageSize",()=>e_),e(eu,"shimSendThrowTypeError",()=>eC),e(eu,"shimConnectionState",()=>eb),e(eu,"removeExtmapAllowMixed",()=>ev),e(eu,"shimAddIceCandidateNullOrEmpty",()=>ek),e(eu,"shimParameterlessSetLocalDescription",()=>eT);var ef={};let em={};function eg(e){if(!e.RTCIceCandidate||e.RTCIceCandidate&&"foundation"in e.RTCIceCandidate.prototype)return;let n=e.RTCIceCandidate;e.RTCIceCandidate=function(e){if("object"==typeof e&&e.candidate&&0===e.candidate.indexOf("a=")&&((e=JSON.parse(JSON.stringify(e))).candidate=e.candidate.substring(2)),e.candidate&&e.candidate.length){let r=new n(e),i=t(ef).parseCandidate(e.candidate);for(let e in i)e in r||Object.defineProperty(r,e,{value:i[e]});return r.toJSON=function(){return{candidate:r.candidate,sdpMid:r.sdpMid,sdpMLineIndex:r.sdpMLineIndex,usernameFragment:r.usernameFragment}},r}return new n(e)},e.RTCIceCandidate.prototype=n.prototype,d(e,"icecandidate",t=>(t.candidate&&Object.defineProperty(t,"candidate",{value:new e.RTCIceCandidate(t.candidate),writable:"false"}),t))}function ey(e){!e.RTCIceCandidate||e.RTCIceCandidate&&"relayProtocol"in e.RTCIceCandidate.prototype||d(e,"icecandidate",e=>{if(e.candidate){let n=t(ef).parseCandidate(e.candidate.candidate);"relay"===n.type&&(e.candidate.relayProtocol=({0:"tls",1:"tcp",2:"udp"})[n.priority>>24])}return e})}function e_(e,n){if(!e.RTCPeerConnection)return;"sctp"in e.RTCPeerConnection.prototype||Object.defineProperty(e.RTCPeerConnection.prototype,"sctp",{get(){return void 0===this._sctp?null:this._sctp}});let r=function(e){if(!e||!e.sdp)return!1;let n=t(ef).splitSections(e.sdp);return n.shift(),n.some(e=>{let n=t(ef).parseMLine(e);return n&&"application"===n.kind&&-1!==n.protocol.indexOf("SCTP")})},i=function(e){let t=e.sdp.match(/mozilla...THIS_IS_SDPARTA-(\d+)/);if(null===t||t.length<2)return -1;let n=parseInt(t[1],10);return n!=n?-1:n},o=function(e){let t=65536;return"firefox"===n.browser&&(t=n.version<57?-1===e?16384:2147483637:n.version<60?57===n.version?65535:65536:2147483637),t},s=function(e,r){let i=65536;"firefox"===n.browser&&57===n.version&&(i=65535);let o=t(ef).matchPrefix(e.sdp,"a=max-message-size:");return o.length>0?i=parseInt(o[0].substring(19),10):"firefox"===n.browser&&-1!==r&&(i=2147483637),i},a=e.RTCPeerConnection.prototype.setRemoteDescription;e.RTCPeerConnection.prototype.setRemoteDescription=function(){if(this._sctp=null,"chrome"===n.browser&&n.version>=76){let{sdpSemantics:e}=this.getConfiguration();"plan-b"===e&&Object.defineProperty(this,"sctp",{get(){return void 0===this._sctp?null:this._sctp},enumerable:!0,configurable:!0})}if(r(arguments[0])){let e;let t=i(arguments[0]),n=o(t),r=s(arguments[0],t);e=0===n&&0===r?Number.POSITIVE_INFINITY:0===n||0===r?Math.max(n,r):Math.min(n,r);let a={};Object.defineProperty(a,"maxMessageSize",{get:()=>e}),this._sctp=a}return a.apply(this,arguments)}}function eC(e){if(!(e.RTCPeerConnection&&"createDataChannel"in e.RTCPeerConnection.prototype))return;function t(e,t){let n=e.send;e.send=function(){let r=arguments[0],i=r.length||r.size||r.byteLength;if("open"===e.readyState&&t.sctp&&i>t.sctp.maxMessageSize)throw TypeError("Message too large (can send a maximum of "+t.sctp.maxMessageSize+" bytes)");return n.apply(e,arguments)}}let n=e.RTCPeerConnection.prototype.createDataChannel;e.RTCPeerConnection.prototype.createDataChannel=function(){let e=n.apply(this,arguments);return t(e,this),e},d(e,"datachannel",e=>(t(e.channel,e.target),e))}function eb(e){if(!e.RTCPeerConnection||"connectionState"in e.RTCPeerConnection.prototype)return;let t=e.RTCPeerConnection.prototype;Object.defineProperty(t,"connectionState",{get(){return({completed:"connected",checking:"connecting"})[this.iceConnectionState]||this.iceConnectionState},enumerable:!0,configurable:!0}),Object.defineProperty(t,"onconnectionstatechange",{get(){return this._onconnectionstatechange||null},set(e){this._onconnectionstatechange&&(this.removeEventListener("connectionstatechange",this._onconnectionstatechange),delete this._onconnectionstatechange),e&&this.addEventListener("connectionstatechange",this._onconnectionstatechange=e)},enumerable:!0,configurable:!0}),["setLocalDescription","setRemoteDescription"].forEach(e=>{let n=t[e];t[e]=function(){return this._connectionstatechangepoly||(this._connectionstatechangepoly=e=>{let t=e.target;if(t._lastConnectionState!==t.connectionState){t._lastConnectionState=t.connectionState;let n=new Event("connectionstatechange",e);t.dispatchEvent(n)}return e},this.addEventListener("iceconnectionstatechange",this._connectionstatechangepoly)),n.apply(this,arguments)}})}function ev(e,t){if(!e.RTCPeerConnection||"chrome"===t.browser&&t.version>=71||"safari"===t.browser&&t.version>=605)return;let n=e.RTCPeerConnection.prototype.setRemoteDescription;e.RTCPeerConnection.prototype.setRemoteDescription=function(t){if(t&&t.sdp&&-1!==t.sdp.indexOf("\na=extmap-allow-mixed")){let n=t.sdp.split("\n").filter(e=>"a=extmap-allow-mixed"!==e.trim()).join("\n");e.RTCSessionDescription&&t instanceof e.RTCSessionDescription?arguments[0]=new e.RTCSessionDescription({type:t.type,sdp:n}):t.sdp=n}return n.apply(this,arguments)}}function ek(e,t){if(!(e.RTCPeerConnection&&e.RTCPeerConnection.prototype))return;let n=e.RTCPeerConnection.prototype.addIceCandidate;n&&0!==n.length&&(e.RTCPeerConnection.prototype.addIceCandidate=function(){return arguments[0]?("chrome"===t.browser&&t.version<78||"firefox"===t.browser&&t.version<68||"safari"===t.browser)&&arguments[0]&&""===arguments[0].candidate?Promise.resolve():n.apply(this,arguments):(arguments[1]&&arguments[1].apply(null),Promise.resolve())})}function eT(e,t){if(!(e.RTCPeerConnection&&e.RTCPeerConnection.prototype))return;let n=e.RTCPeerConnection.prototype.setLocalDescription;n&&0!==n.length&&(e.RTCPeerConnection.prototype.setLocalDescription=function(){let e=arguments[0]||{};if("object"!=typeof e||e.type&&e.sdp)return n.apply(this,arguments);if(!(e={type:e.type,sdp:e.sdp}).type)switch(this.signalingState){case"stable":case"have-local-offer":case"have-remote-pranswer":e.type="offer";break;default:e.type="answer"}return e.sdp||"offer"!==e.type&&"answer"!==e.type?n.apply(this,[e]):("offer"===e.type?this.createOffer:this.createAnswer).apply(this).then(e=>n.apply(this,[e]))})}em.generateIdentifier=function(){return Math.random().toString(36).substring(2,12)},em.localCName=em.generateIdentifier(),em.splitLines=function(e){return e.trim().split("\n").map(e=>e.trim())},em.splitSections=function(e){return e.split("\nm=").map((e,t)=>(t>0?"m="+e:e).trim()+"\r\n")},em.getDescription=function(e){let t=em.splitSections(e);return t&&t[0]},em.getMediaSections=function(e){let t=em.splitSections(e);return t.shift(),t},em.matchPrefix=function(e,t){return em.splitLines(e).filter(e=>0===e.indexOf(t))},em.parseCandidate=function(e){let t;let n={foundation:(t=0===e.indexOf("a=candidate:")?e.substring(12).split(" "):e.substring(10).split(" "))[0],component:{1:"rtp",2:"rtcp"}[t[1]]||t[1],protocol:t[2].toLowerCase(),priority:parseInt(t[3],10),ip:t[4],address:t[4],port:parseInt(t[5],10),type:t[7]};for(let e=8;e<t.length;e+=2)switch(t[e]){case"raddr":n.relatedAddress=t[e+1];break;case"rport":n.relatedPort=parseInt(t[e+1],10);break;case"tcptype":n.tcpType=t[e+1];break;case"ufrag":n.ufrag=t[e+1],n.usernameFragment=t[e+1];break;default:void 0===n[t[e]]&&(n[t[e]]=t[e+1])}return n},em.writeCandidate=function(e){let t=[];t.push(e.foundation);let n=e.component;"rtp"===n?t.push(1):"rtcp"===n?t.push(2):t.push(n),t.push(e.protocol.toUpperCase()),t.push(e.priority),t.push(e.address||e.ip),t.push(e.port);let r=e.type;return t.push("typ"),t.push(r),"host"!==r&&e.relatedAddress&&e.relatedPort&&(t.push("raddr"),t.push(e.relatedAddress),t.push("rport"),t.push(e.relatedPort)),e.tcpType&&"tcp"===e.protocol.toLowerCase()&&(t.push("tcptype"),t.push(e.tcpType)),(e.usernameFragment||e.ufrag)&&(t.push("ufrag"),t.push(e.usernameFragment||e.ufrag)),"candidate:"+t.join(" ")},em.parseIceOptions=function(e){return e.substring(14).split(" ")},em.parseRtpMap=function(e){let t=e.substring(9).split(" "),n={payloadType:parseInt(t.shift(),10)};return t=t[0].split("/"),n.name=t[0],n.clockRate=parseInt(t[1],10),n.channels=3===t.length?parseInt(t[2],10):1,n.numChannels=n.channels,n},em.writeRtpMap=function(e){let t=e.payloadType;void 0!==e.preferredPayloadType&&(t=e.preferredPayloadType);let n=e.channels||e.numChannels||1;return"a=rtpmap:"+t+" "+e.name+"/"+e.clockRate+(1!==n?"/"+n:"")+"\r\n"},em.parseExtmap=function(e){let t=e.substring(9).split(" ");return{id:parseInt(t[0],10),direction:t[0].indexOf("/")>0?t[0].split("/")[1]:"sendrecv",uri:t[1],attributes:t.slice(2).join(" ")}},em.writeExtmap=function(e){return"a=extmap:"+(e.id||e.preferredId)+(e.direction&&"sendrecv"!==e.direction?"/"+e.direction:"")+" "+e.uri+(e.attributes?" "+e.attributes:"")+"\r\n"},em.parseFmtp=function(e){let t;let n={},r=e.substring(e.indexOf(" ")+1).split(";");for(let e=0;e<r.length;e++)n[(t=r[e].trim().split("="))[0].trim()]=t[1];return n},em.writeFmtp=function(e){let t="",n=e.payloadType;if(void 0!==e.preferredPayloadType&&(n=e.preferredPayloadType),e.parameters&&Object.keys(e.parameters).length){let r=[];Object.keys(e.parameters).forEach(t=>{void 0!==e.parameters[t]?r.push(t+"="+e.parameters[t]):r.push(t)}),t+="a=fmtp:"+n+" "+r.join(";")+"\r\n"}return t},em.parseRtcpFb=function(e){let t=e.substring(e.indexOf(" ")+1).split(" ");return{type:t.shift(),parameter:t.join(" ")}},em.writeRtcpFb=function(e){let t="",n=e.payloadType;return void 0!==e.preferredPayloadType&&(n=e.preferredPayloadType),e.rtcpFeedback&&e.rtcpFeedback.length&&e.rtcpFeedback.forEach(e=>{t+="a=rtcp-fb:"+n+" "+e.type+(e.parameter&&e.parameter.length?" "+e.parameter:"")+"\r\n"}),t},em.parseSsrcMedia=function(e){let t=e.indexOf(" "),n={ssrc:parseInt(e.substring(7,t),10)},r=e.indexOf(":",t);return r>-1?(n.attribute=e.substring(t+1,r),n.value=e.substring(r+1)):n.attribute=e.substring(t+1),n},em.parseSsrcGroup=function(e){let t=e.substring(13).split(" ");return{semantics:t.shift(),ssrcs:t.map(e=>parseInt(e,10))}},em.getMid=function(e){let t=em.matchPrefix(e,"a=mid:")[0];if(t)return t.substring(6)},em.parseFingerprint=function(e){let t=e.substring(14).split(" ");return{algorithm:t[0].toLowerCase(),value:t[1].toUpperCase()}},em.getDtlsParameters=function(e,t){return{role:"auto",fingerprints:em.matchPrefix(e+t,"a=fingerprint:").map(em.parseFingerprint)}},em.writeDtlsParameters=function(e,t){let n="a=setup:"+t+"\r\n";return e.fingerprints.forEach(e=>{n+="a=fingerprint:"+e.algorithm+" "+e.value+"\r\n"}),n},em.parseCryptoLine=function(e){let t=e.substring(9).split(" ");return{tag:parseInt(t[0],10),cryptoSuite:t[1],keyParams:t[2],sessionParams:t.slice(3)}},em.writeCryptoLine=function(e){return"a=crypto:"+e.tag+" "+e.cryptoSuite+" "+("object"==typeof e.keyParams?em.writeCryptoKeyParams(e.keyParams):e.keyParams)+(e.sessionParams?" "+e.sessionParams.join(" "):"")+"\r\n"},em.parseCryptoKeyParams=function(e){if(0!==e.indexOf("inline:"))return null;let t=e.substring(7).split("|");return{keyMethod:"inline",keySalt:t[0],lifeTime:t[1],mkiValue:t[2]?t[2].split(":")[0]:void 0,mkiLength:t[2]?t[2].split(":")[1]:void 0}},em.writeCryptoKeyParams=function(e){return e.keyMethod+":"+e.keySalt+(e.lifeTime?"|"+e.lifeTime:"")+(e.mkiValue&&e.mkiLength?"|"+e.mkiValue+":"+e.mkiLength:"")},em.getCryptoParameters=function(e,t){return em.matchPrefix(e+t,"a=crypto:").map(em.parseCryptoLine)},em.getIceParameters=function(e,t){let n=em.matchPrefix(e+t,"a=ice-ufrag:")[0],r=em.matchPrefix(e+t,"a=ice-pwd:")[0];return n&&r?{usernameFragment:n.substring(12),password:r.substring(10)}:null},em.writeIceParameters=function(e){let t="a=ice-ufrag:"+e.usernameFragment+"\r\na=ice-pwd:"+e.password+"\r\n";return e.iceLite&&(t+="a=ice-lite\r\n"),t},em.parseRtpParameters=function(e){let t={codecs:[],headerExtensions:[],fecMechanisms:[],rtcp:[]},n=em.splitLines(e)[0].split(" ");t.profile=n[2];for(let r=3;r<n.length;r++){let i=n[r],o=em.matchPrefix(e,"a=rtpmap:"+i+" ")[0];if(o){let n=em.parseRtpMap(o),r=em.matchPrefix(e,"a=fmtp:"+i+" ");switch(n.parameters=r.length?em.parseFmtp(r[0]):{},n.rtcpFeedback=em.matchPrefix(e,"a=rtcp-fb:"+i+" ").map(em.parseRtcpFb),t.codecs.push(n),n.name.toUpperCase()){case"RED":case"ULPFEC":t.fecMechanisms.push(n.name.toUpperCase())}}}em.matchPrefix(e,"a=extmap:").forEach(e=>{t.headerExtensions.push(em.parseExtmap(e))});let r=em.matchPrefix(e,"a=rtcp-fb:* ").map(em.parseRtcpFb);return t.codecs.forEach(e=>{r.forEach(t=>{e.rtcpFeedback.find(e=>e.type===t.type&&e.parameter===t.parameter)||e.rtcpFeedback.push(t)})}),t},em.writeRtpDescription=function(e,t){let n="";n+="m="+e+" "+(t.codecs.length>0?"9":"0")+" "+(t.profile||"UDP/TLS/RTP/SAVPF")+" "+t.codecs.map(e=>void 0!==e.preferredPayloadType?e.preferredPayloadType:e.payloadType).join(" ")+"\r\nc=IN IP4 0.0.0.0\r\na=rtcp:9 IN IP4 0.0.0.0\r\n",t.codecs.forEach(e=>{n+=em.writeRtpMap(e)+em.writeFmtp(e)+em.writeRtcpFb(e)});let r=0;return t.codecs.forEach(e=>{e.maxptime>r&&(r=e.maxptime)}),r>0&&(n+="a=maxptime:"+r+"\r\n"),t.headerExtensions&&t.headerExtensions.forEach(e=>{n+=em.writeExtmap(e)}),n},em.parseRtpEncodingParameters=function(e){let t;let n=[],r=em.parseRtpParameters(e),i=-1!==r.fecMechanisms.indexOf("RED"),o=-1!==r.fecMechanisms.indexOf("ULPFEC"),s=em.matchPrefix(e,"a=ssrc:").map(e=>em.parseSsrcMedia(e)).filter(e=>"cname"===e.attribute),a=s.length>0&&s[0].ssrc,c=em.matchPrefix(e,"a=ssrc-group:FID").map(e=>e.substring(17).split(" ").map(e=>parseInt(e,10)));c.length>0&&c[0].length>1&&c[0][0]===a&&(t=c[0][1]),r.codecs.forEach(e=>{if("RTX"===e.name.toUpperCase()&&e.parameters.apt){let r={ssrc:a,codecPayloadType:parseInt(e.parameters.apt,10)};a&&t&&(r.rtx={ssrc:t}),n.push(r),i&&((r=JSON.parse(JSON.stringify(r))).fec={ssrc:a,mechanism:o?"red+ulpfec":"red"},n.push(r))}}),0===n.length&&a&&n.push({ssrc:a});let l=em.matchPrefix(e,"b=");return l.length&&(l=0===l[0].indexOf("b=TIAS:")?parseInt(l[0].substring(7),10):0===l[0].indexOf("b=AS:")?950*parseInt(l[0].substring(5),10)-16e3:void 0,n.forEach(e=>{e.maxBitrate=l})),n},em.parseRtcpParameters=function(e){let t={},n=em.matchPrefix(e,"a=ssrc:").map(e=>em.parseSsrcMedia(e)).filter(e=>"cname"===e.attribute)[0];n&&(t.cname=n.value,t.ssrc=n.ssrc);let r=em.matchPrefix(e,"a=rtcp-rsize");t.reducedSize=r.length>0,t.compound=0===r.length;let i=em.matchPrefix(e,"a=rtcp-mux");return t.mux=i.length>0,t},em.writeRtcpParameters=function(e){let t="";return e.reducedSize&&(t+="a=rtcp-rsize\r\n"),e.mux&&(t+="a=rtcp-mux\r\n"),void 0!==e.ssrc&&e.cname&&(t+="a=ssrc:"+e.ssrc+" cname:"+e.cname+"\r\n"),t},em.parseMsid=function(e){let t;let n=em.matchPrefix(e,"a=msid:");if(1===n.length)return{stream:(t=n[0].substring(7).split(" "))[0],track:t[1]};let r=em.matchPrefix(e,"a=ssrc:").map(e=>em.parseSsrcMedia(e)).filter(e=>"msid"===e.attribute);if(r.length>0)return{stream:(t=r[0].value.split(" "))[0],track:t[1]}},em.parseSctpDescription=function(e){let t;let n=em.parseMLine(e),r=em.matchPrefix(e,"a=max-message-size:");r.length>0&&(t=parseInt(r[0].substring(19),10)),isNaN(t)&&(t=65536);let i=em.matchPrefix(e,"a=sctp-port:");if(i.length>0)return{port:parseInt(i[0].substring(12),10),protocol:n.fmt,maxMessageSize:t};let o=em.matchPrefix(e,"a=sctpmap:");if(o.length>0){let e=o[0].substring(10).split(" ");return{port:parseInt(e[0],10),protocol:e[1],maxMessageSize:t}}},em.writeSctpDescription=function(e,t){let n=[];return n="DTLS/SCTP"!==e.protocol?["m="+e.kind+" 9 "+e.protocol+" "+t.protocol+"\r\n","c=IN IP4 0.0.0.0\r\n","a=sctp-port:"+t.port+"\r\n"]:["m="+e.kind+" 9 "+e.protocol+" "+t.port+"\r\n","c=IN IP4 0.0.0.0\r\n","a=sctpmap:"+t.port+" "+t.protocol+" 65535\r\n"],void 0!==t.maxMessageSize&&n.push("a=max-message-size:"+t.maxMessageSize+"\r\n"),n.join("")},em.generateSessionId=function(){return Math.random().toString().substr(2,22)},em.writeSessionBoilerplate=function(e,t,n){return"v=0\r\no="+(n||"thisisadapterortc")+" "+(e||em.generateSessionId())+" "+(void 0!==t?t:2)+" IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\n"},em.getDirection=function(e,t){let n=em.splitLines(e);for(let e=0;e<n.length;e++)switch(n[e]){case"a=sendrecv":case"a=sendonly":case"a=recvonly":case"a=inactive":return n[e].substring(2)}return t?em.getDirection(t):"sendrecv"},em.getKind=function(e){return em.splitLines(e)[0].split(" ")[0].substring(2)},em.isRejected=function(e){return"0"===e.split(" ",2)[1]},em.parseMLine=function(e){let t=em.splitLines(e)[0].substring(2).split(" ");return{kind:t[0],port:parseInt(t[1],10),protocol:t[2],fmt:t.slice(3).join(" ")}},em.parseOLine=function(e){let t=em.matchPrefix(e,"o=")[0].substring(2).split(" ");return{username:t[0],sessionId:t[1],sessionVersion:parseInt(t[2],10),netType:t[3],addressType:t[4],address:t[5]}},em.isValidSDP=function(e){if("string"!=typeof e||0===e.length)return!1;let t=em.splitLines(e);for(let e=0;e<t.length;e++)if(t[e].length<2||"="!==t[e].charAt(1))return!1;return!0},ef=em;let eS=function({window:e}={},t={shimChrome:!0,shimFirefox:!0,shimSafari:!0}){let n=function(e){let t={browser:null,version:null};if(void 0===e||!e.navigator||!e.navigator.userAgent)return t.browser="Not a browser.",t;let{navigator:n}=e;if(n.userAgentData&&n.userAgentData.brands){let e=n.userAgentData.brands.find(e=>"Chromium"===e.brand);if(e)return{browser:"chrome",version:parseInt(e.version,10)}}return n.mozGetUserMedia?(t.browser="firefox",t.version=p(n.userAgent,/Firefox\/(\d+)\./,1)):n.webkitGetUserMedia||!1===e.isSecureContext&&e.webkitRTCPeerConnection?(t.browser="chrome",t.version=p(n.userAgent,/Chrom(e|ium)\/(\d+)\./,2)):e.RTCPeerConnection&&n.userAgent.match(/AppleWebKit\/(\d+)\./)?(t.browser="safari",t.version=p(n.userAgent,/AppleWebKit\/(\d+)\./,1),t.supportsUnifiedPlan=e.RTCRtpTransceiver&&"currentDirection"in e.RTCRtpTransceiver.prototype):t.browser="Not a supported browser.",t}(e),r={browserDetails:n,commonShim:eu,extractVersion:p,disableLog:h,disableWarnings:u,sdp:ef};switch(n.browser){case"chrome":if(!j||!j.shimPeerConnection||!t.shimChrome){f("Chrome shim is not included in this adapter release.");break}if(null===n.version){f("Chrome shim can not determine version, not shimming.");break}f("adapter.js shimming chrome."),r.browserShim=j,ek(e,n),eT(e,n),j.shimGetUserMedia(e,n),j.shimMediaStream(e,n),j.shimPeerConnection(e,n),j.shimOnTrack(e,n),j.shimAddTrackRemoveTrack(e,n),j.shimGetSendersWithDtmf(e,n),j.shimSenderReceiverGetStats(e,n),j.fixNegotiationNeeded(e,n),eg(e,n),ey(e,n),eb(e,n),e_(e,n),eC(e,n),ev(e,n);break;case"firefox":if(!V||!V.shimPeerConnection||!t.shimFirefox){f("Firefox shim is not included in this adapter release.");break}f("adapter.js shimming firefox."),r.browserShim=V,ek(e,n),eT(e,n),V.shimGetUserMedia(e,n),V.shimPeerConnection(e,n),V.shimOnTrack(e,n),V.shimRemoveStream(e,n),V.shimSenderGetStats(e,n),V.shimReceiverGetStats(e,n),V.shimRTCDataChannel(e,n),V.shimAddTransceiver(e,n),V.shimGetParameters(e,n),V.shimCreateOffer(e,n),V.shimCreateAnswer(e,n),eg(e,n),eb(e,n),e_(e,n),eC(e,n);break;case"safari":if(!er||!t.shimSafari){f("Safari shim is not included in this adapter release.");break}f("adapter.js shimming safari."),r.browserShim=er,ek(e,n),eT(e,n),er.shimRTCIceServerUrls(e,n),er.shimCreateOfferLegacy(e,n),er.shimCallbacksAPI(e,n),er.shimLocalStreamsAPI(e,n),er.shimRemoteStreamsAPI(e,n),er.shimTrackEventTransceiver(e,n),er.shimGetUserMedia(e,n),er.shimAudioContext(e,n),eg(e,n),ey(e,n),e_(e,n),eC(e,n),ev(e,n);break;default:f("Unsupported browser!")}return r}({window:"undefined"==typeof window?void 0:window}),eR=eS.default||eS,eP=new class{isWebRTCSupported(){return"undefined"!=typeof RTCPeerConnection}isBrowserSupported(){let e=this.getBrowser(),t=this.getVersion();return!!this.supportedBrowsers.includes(e)&&("chrome"===e?t>=this.minChromeVersion:"firefox"===e?t>=this.minFirefoxVersion:"safari"===e&&!this.isIOS&&t>=this.minSafariVersion)}getBrowser(){return eR.browserDetails.browser}getVersion(){return eR.browserDetails.version||0}isUnifiedPlanSupported(){let e;let t=this.getBrowser(),n=eR.browserDetails.version||0;if("chrome"===t&&n<this.minChromeVersion)return!1;if("firefox"===t&&n>=this.minFirefoxVersion)return!0;if(!window.RTCRtpTransceiver||!("currentDirection"in RTCRtpTransceiver.prototype))return!1;let r=!1;try{(e=new RTCPeerConnection).addTransceiver("audio"),r=!0}catch(e){}finally{e&&e.close()}return r}toString(){return`Supports:
+    browser:${this.getBrowser()}
+    version:${this.getVersion()}
+    isIOS:${this.isIOS}
+    isWebRTCSupported:${this.isWebRTCSupported()}
+    isBrowserSupported:${this.isBrowserSupported()}
+    isUnifiedPlanSupported:${this.isUnifiedPlanSupported()}`}constructor(){this.isIOS="undefined"!=typeof navigator&&["iPad","iPhone","iPod"].includes(navigator.platform),this.supportedBrowsers=["firefox","chrome","safari"],this.minFirefoxVersion=59,this.minChromeVersion=72,this.minSafariVersion=605}},ew=e=>!e||/^[A-Za-z0-9]+(?:[ _-][A-Za-z0-9]+)*$/.test(e),eE=()=>Math.random().toString(36).slice(2),eD={iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:["turn:eu-0.turn.peerjs.com:3478","turn:us-0.turn.peerjs.com:3478"],username:"peerjs",credential:"peerjsp"}],sdpSemantics:"unified-plan"},ex=new class extends n{noop(){}blobToArrayBuffer(e,t){let n=new FileReader;return n.onload=function(e){e.target&&t(e.target.result)},n.readAsArrayBuffer(e),n}binaryStringToArrayBuffer(e){let t=new Uint8Array(e.length);for(let n=0;n<e.length;n++)t[n]=255&e.charCodeAt(n);return t.buffer}isSecure(){return"https:"===location.protocol}constructor(...e){super(...e),this.CLOUD_HOST="0.peerjs.com",this.CLOUD_PORT=443,this.chunkedBrowsers={Chrome:1,chrome:1},this.defaultConfig=eD,this.browser=eP.getBrowser(),this.browserVersion=eP.getVersion(),this.pack=o,this.unpack=i,this.supports=function(){let e;let t={browser:eP.isBrowserSupported(),webRTC:eP.isWebRTCSupported(),audioVideo:!1,data:!1,binaryBlob:!1,reliable:!1};if(!t.webRTC)return t;try{let n;e=new RTCPeerConnection(eD),t.audioVideo=!0;try{n=e.createDataChannel("_PEERJSTEST",{ordered:!0}),t.data=!0,t.reliable=!!n.ordered;try{n.binaryType="blob",t.binaryBlob=!eP.isIOS}catch(e){}}catch(e){}finally{n&&n.close()}}catch(e){}finally{e&&e.close()}return t}(),this.validateId=ew,this.randomToken=eE}};(_=P||(P={}))[_.Disabled=0]="Disabled",_[_.Errors=1]="Errors",_[_.Warnings=2]="Warnings",_[_.All=3]="All";var eI=new class{get logLevel(){return this._logLevel}set logLevel(e){this._logLevel=e}log(...e){this._logLevel>=3&&this._print(3,...e)}warn(...e){this._logLevel>=2&&this._print(2,...e)}error(...e){this._logLevel>=1&&this._print(1,...e)}setLogFunction(e){this._print=e}_print(e,...t){let n=["PeerJS: ",...t];for(let e in n)n[e]instanceof Error&&(n[e]="("+n[e].name+") "+n[e].message);e>=3?console.log(...n):e>=2?console.warn("WARNING",...n):e>=1&&console.error("ERROR",...n)}constructor(){this._logLevel=0}},eM={},eO=Object.prototype.hasOwnProperty,ej="~";function eL(){}function eA(e,t,n){this.fn=e,this.context=t,this.once=n||!1}function eB(e,t,n,r,i){if("function"!=typeof n)throw TypeError("The listener must be a function");var o=new eA(n,r||e,i),s=ej?ej+t:t;return e._events[s]?e._events[s].fn?e._events[s]=[e._events[s],o]:e._events[s].push(o):(e._events[s]=o,e._eventsCount++),e}function eF(e,t){0==--e._eventsCount?e._events=new eL:delete e._events[t]}function eU(){this._events=new eL,this._eventsCount=0}Object.create&&(eL.prototype=Object.create(null),new eL().__proto__||(ej=!1)),eU.prototype.eventNames=function(){var e,t,n=[];if(0===this._eventsCount)return n;for(t in e=this._events)eO.call(e,t)&&n.push(ej?t.slice(1):t);return Object.getOwnPropertySymbols?n.concat(Object.getOwnPropertySymbols(e)):n},eU.prototype.listeners=function(e){var t=ej?ej+e:e,n=this._events[t];if(!n)return[];if(n.fn)return[n.fn];for(var r=0,i=n.length,o=Array(i);r<i;r++)o[r]=n[r].fn;return o},eU.prototype.listenerCount=function(e){var t=ej?ej+e:e,n=this._events[t];return n?n.fn?1:n.length:0},eU.prototype.emit=function(e,t,n,r,i,o){var s=ej?ej+e:e;if(!this._events[s])return!1;var a,c,l=this._events[s],p=arguments.length;if(l.fn){switch(l.once&&this.removeListener(e,l.fn,void 0,!0),p){case 1:return l.fn.call(l.context),!0;case 2:return l.fn.call(l.context,t),!0;case 3:return l.fn.call(l.context,t,n),!0;case 4:return l.fn.call(l.context,t,n,r),!0;case 5:return l.fn.call(l.context,t,n,r,i),!0;case 6:return l.fn.call(l.context,t,n,r,i,o),!0}for(c=1,a=Array(p-1);c<p;c++)a[c-1]=arguments[c];l.fn.apply(l.context,a)}else{var d,h=l.length;for(c=0;c<h;c++)switch(l[c].once&&this.removeListener(e,l[c].fn,void 0,!0),p){case 1:l[c].fn.call(l[c].context);break;case 2:l[c].fn.call(l[c].context,t);break;case 3:l[c].fn.call(l[c].context,t,n);break;case 4:l[c].fn.call(l[c].context,t,n,r);break;default:if(!a)for(d=1,a=Array(p-1);d<p;d++)a[d-1]=arguments[d];l[c].fn.apply(l[c].context,a)}}return!0},eU.prototype.on=function(e,t,n){return eB(this,e,t,n,!1)},eU.prototype.once=function(e,t,n){return eB(this,e,t,n,!0)},eU.prototype.removeListener=function(e,t,n,r){var i=ej?ej+e:e;if(!this._events[i])return this;if(!t)return eF(this,i),this;var o=this._events[i];if(o.fn)o.fn!==t||r&&!o.once||n&&o.context!==n||eF(this,i);else{for(var s=0,a=[],c=o.length;s<c;s++)(o[s].fn!==t||r&&!o[s].once||n&&o[s].context!==n)&&a.push(o[s]);a.length?this._events[i]=1===a.length?a[0]:a:eF(this,i)}return this},eU.prototype.removeAllListeners=function(e){var t;return e?(t=ej?ej+e:e,this._events[t]&&eF(this,t)):(this._events=new eL,this._eventsCount=0),this},eU.prototype.off=eU.prototype.removeListener,eU.prototype.addListener=eU.prototype.on,eU.prefixed=ej,eU.EventEmitter=eU,eM=eU,(C=w||(w={})).Data="data",C.Media="media",(b=E||(E={})).BrowserIncompatible="browser-incompatible",b.Disconnected="disconnected",b.InvalidID="invalid-id",b.InvalidKey="invalid-key",b.Network="network",b.PeerUnavailable="peer-unavailable",b.SslUnavailable="ssl-unavailable",b.ServerError="server-error",b.SocketError="socket-error",b.SocketClosed="socket-closed",b.UnavailableID="unavailable-id",b.WebRTC="webrtc",(v=D||(D={})).NegotiationFailed="negotiation-failed",v.ConnectionClosed="connection-closed",(k=x||(x={})).NotOpenYet="not-open-yet",k.MessageToBig="message-too-big",(T=I||(I={})).Binary="binary",T.BinaryUTF8="binary-utf8",T.JSON="json",T.None="raw",(S=M||(M={})).Message="message",S.Disconnected="disconnected",S.Error="error",S.Close="close",(R=O||(O={})).Heartbeat="HEARTBEAT",R.Candidate="CANDIDATE",R.Offer="OFFER",R.Answer="ANSWER",R.Open="OPEN",R.Error="ERROR",R.IdTaken="ID-TAKEN",R.InvalidKey="INVALID-KEY",R.Leave="LEAVE",R.Expire="EXPIRE";var ez={};ez=JSON.parse('{"name":"peerjs","version":"1.5.4","keywords":["peerjs","webrtc","p2p","rtc"],"description":"PeerJS client","homepage":"https://peerjs.com","bugs":{"url":"https://github.com/peers/peerjs/issues"},"repository":{"type":"git","url":"https://github.com/peers/peerjs"},"license":"MIT","contributors":["Michelle Bu <michelle@michellebu.com>","afrokick <devbyru@gmail.com>","ericz <really.ez@gmail.com>","Jairo <kidandcat@gmail.com>","Jonas Gloning <34194370+jonasgloning@users.noreply.github.com>","Jairo Caro-Accino Viciana <jairo@galax.be>","Carlos Caballero <carlos.caballero.gonzalez@gmail.com>","hc <hheennrryy@gmail.com>","Muhammad Asif <capripio@gmail.com>","PrashoonB <prashoonbhattacharjee@gmail.com>","Harsh Bardhan Mishra <47351025+HarshCasper@users.noreply.github.com>","akotynski <aleksanderkotbury@gmail.com>","lmb <i@lmb.io>","Jairooo <jairocaro@msn.com>","Moritz Stückler <moritz.stueckler@gmail.com>","Simon <crydotsnakegithub@gmail.com>","Denis Lukov <denismassters@gmail.com>","Philipp Hancke <fippo@andyet.net>","Hans Oksendahl <hansoksendahl@gmail.com>","Jess <jessachandler@gmail.com>","khankuan <khankuan@gmail.com>","DUODVK <kurmanov.work@gmail.com>","XiZhao <kwang1imsa@gmail.com>","Matthias Lohr <matthias@lohr.me>","=frank tree <=frnktrb@googlemail.com>","Andre Eckardt <aeckardt@outlook.com>","Chris Cowan <agentme49@gmail.com>","Alex Chuev <alex@chuev.com>","alxnull <alxnull@e.mail.de>","Yemel Jardi <angel.jardi@gmail.com>","Ben Parnell <benjaminparnell.94@gmail.com>","Benny Lichtner <bennlich@gmail.com>","fresheneesz <bitetrudpublic@gmail.com>","bob.barstead@exaptive.com <bob.barstead@exaptive.com>","chandika <chandika@gmail.com>","emersion <contact@emersion.fr>","Christopher Van <cvan@users.noreply.github.com>","eddieherm <edhermoso@gmail.com>","Eduardo Pinho <enet4mikeenet@gmail.com>","Evandro Zanatta <ezanatta@tray.net.br>","Gardner Bickford <gardner@users.noreply.github.com>","Gian Luca <gianluca.cecchi@cynny.com>","PatrickJS <github@gdi2290.com>","jonnyf <github@jonathanfoss.co.uk>","Hizkia Felix <hizkifw@gmail.com>","Hristo Oskov <hristo.oskov@gmail.com>","Isaac Madwed <i.madwed@gmail.com>","Ilya Konanykhin <ilya.konanykhin@gmail.com>","jasonbarry <jasbarry@me.com>","Jonathan Burke <jonathan.burke.1311@googlemail.com>","Josh Hamit <josh.hamit@gmail.com>","Jordan Austin <jrax86@gmail.com>","Joel Wetzell <jwetzell@yahoo.com>","xizhao <kevin.wang@cloudera.com>","Alberto Torres <kungfoobar@gmail.com>","Jonathan Mayol <mayoljonathan@gmail.com>","Jefferson Felix <me@jsfelix.dev>","Rolf Erik Lekang <me@rolflekang.com>","Kevin Mai-Husan Chia <mhchia@users.noreply.github.com>","Pepijn de Vos <pepijndevos@gmail.com>","JooYoung <qkdlql@naver.com>","Tobias Speicher <rootcommander@gmail.com>","Steve Blaurock <sblaurock@gmail.com>","Kyrylo Shegeda <shegeda@ualberta.ca>","Diwank Singh Tomer <singh@diwank.name>","Sören Balko <Soeren.Balko@gmail.com>","Arpit Solanki <solankiarpit1997@gmail.com>","Yuki Ito <yuki@gnnk.net>","Artur Zayats <zag2art@gmail.com>"],"funding":{"type":"opencollective","url":"https://opencollective.com/peer"},"collective":{"type":"opencollective","url":"https://opencollective.com/peer"},"files":["dist/*"],"sideEffects":["lib/global.ts","lib/supports.ts"],"main":"dist/bundler.cjs","module":"dist/bundler.mjs","browser-minified":"dist/peerjs.min.js","browser-unminified":"dist/peerjs.js","browser-minified-msgpack":"dist/serializer.msgpack.mjs","types":"dist/types.d.ts","engines":{"node":">= 14"},"targets":{"types":{"source":"lib/exports.ts"},"main":{"source":"lib/exports.ts","sourceMap":{"inlineSources":true}},"module":{"source":"lib/exports.ts","includeNodeModules":["eventemitter3"],"sourceMap":{"inlineSources":true}},"browser-minified":{"context":"browser","outputFormat":"global","optimize":true,"engines":{"browsers":"chrome >= 83, edge >= 83, firefox >= 80, safari >= 15"},"source":"lib/global.ts"},"browser-unminified":{"context":"browser","outputFormat":"global","optimize":false,"engines":{"browsers":"chrome >= 83, edge >= 83, firefox >= 80, safari >= 15"},"source":"lib/global.ts"},"browser-minified-msgpack":{"context":"browser","outputFormat":"esmodule","isLibrary":true,"optimize":true,"engines":{"browsers":"chrome >= 83, edge >= 83, firefox >= 102, safari >= 15"},"source":"lib/dataconnection/StreamConnection/MsgPack.ts"}},"scripts":{"contributors":"git-authors-cli --print=false && prettier --write package.json && git add package.json package-lock.json && git commit -m \\"chore(contributors): update and sort contributors list\\"","check":"tsc --noEmit && tsc -p e2e/tsconfig.json --noEmit","watch":"parcel watch","build":"rm -rf dist && parcel build","prepublishOnly":"npm run build","test":"jest","test:watch":"jest --watch","coverage":"jest --coverage --collectCoverageFrom=\\"./lib/**\\"","format":"prettier --write .","format:check":"prettier --check .","semantic-release":"semantic-release","e2e":"wdio run e2e/wdio.local.conf.ts","e2e:bstack":"wdio run e2e/wdio.bstack.conf.ts"},"devDependencies":{"@parcel/config-default":"^2.9.3","@parcel/packager-ts":"^2.9.3","@parcel/transformer-typescript-tsc":"^2.9.3","@parcel/transformer-typescript-types":"^2.9.3","@semantic-release/changelog":"^6.0.1","@semantic-release/git":"^10.0.1","@swc/core":"^1.3.27","@swc/jest":"^0.2.24","@types/jasmine":"^4.3.4","@wdio/browserstack-service":"^8.11.2","@wdio/cli":"^8.11.2","@wdio/globals":"^8.11.2","@wdio/jasmine-framework":"^8.11.2","@wdio/local-runner":"^8.11.2","@wdio/spec-reporter":"^8.11.2","@wdio/types":"^8.10.4","http-server":"^14.1.1","jest":"^29.3.1","jest-environment-jsdom":"^29.3.1","mock-socket":"^9.0.0","parcel":"^2.9.3","prettier":"^3.0.0","semantic-release":"^21.0.0","ts-node":"^10.9.1","typescript":"^5.0.0","wdio-geckodriver-service":"^5.0.1"},"dependencies":{"@msgpack/msgpack":"^2.8.0","eventemitter3":"^4.0.7","peerjs-js-binarypack":"^2.1.0","webrtc-adapter":"^9.0.0"},"alias":{"process":false,"buffer":false}}');class eN extends eM.EventEmitter{start(e,t){this._id=e;let n=`${this._baseUrl}&id=${e}&token=${t}`;!this._socket&&this._disconnected&&(this._socket=new WebSocket(n+"&version="+ez.version),this._disconnected=!1,this._socket.onmessage=e=>{let t;try{t=JSON.parse(e.data),eI.log("Server message received:",t)}catch(t){eI.log("Invalid server message",e.data);return}this.emit(M.Message,t)},this._socket.onclose=e=>{this._disconnected||(eI.log("Socket closed.",e),this._cleanup(),this._disconnected=!0,this.emit(M.Disconnected))},this._socket.onopen=()=>{this._disconnected||(this._sendQueuedMessages(),eI.log("Socket open"),this._scheduleHeartbeat())})}_scheduleHeartbeat(){this._wsPingTimer=setTimeout(()=>{this._sendHeartbeat()},this.pingInterval)}_sendHeartbeat(){if(!this._wsOpen()){eI.log("Cannot send heartbeat, because socket closed");return}let e=JSON.stringify({type:O.Heartbeat});this._socket.send(e),this._scheduleHeartbeat()}_wsOpen(){return!!this._socket&&1===this._socket.readyState}_sendQueuedMessages(){let e=[...this._messagesQueue];for(let t of(this._messagesQueue=[],e))this.send(t)}send(e){if(this._disconnected)return;if(!this._id){this._messagesQueue.push(e);return}if(!e.type){this.emit(M.Error,"Invalid message");return}if(!this._wsOpen())return;let t=JSON.stringify(e);this._socket.send(t)}close(){this._disconnected||(this._cleanup(),this._disconnected=!0)}_cleanup(){this._socket&&(this._socket.onopen=this._socket.onmessage=this._socket.onclose=null,this._socket.close(),this._socket=void 0),clearTimeout(this._wsPingTimer)}constructor(e,t,n,r,i,o=5e3){super(),this.pingInterval=o,this._disconnected=!0,this._messagesQueue=[],this._baseUrl=(e?"wss://":"ws://")+t+":"+n+r+"peerjs?key="+i}}class e${startConnection(e){let t=this._startPeerConnection();if(this.connection.peerConnection=t,this.connection.type===w.Media&&e._stream&&this._addTracksToConnection(e._stream,t),e.originator){let n=this.connection,r={ordered:!!e.reliable},i=t.createDataChannel(n.label,r);n._initializeDataChannel(i),this._makeOffer()}else this.handleSDP("OFFER",e.sdp)}_startPeerConnection(){eI.log("Creating RTCPeerConnection.");let e=new RTCPeerConnection(this.connection.provider.options.config);return this._setupListeners(e),e}_setupListeners(e){let t=this.connection.peer,n=this.connection.connectionId,r=this.connection.type,i=this.connection.provider;eI.log("Listening for ICE candidates."),e.onicecandidate=e=>{e.candidate&&e.candidate.candidate&&(eI.log(`Received ICE candidates for ${t}:`,e.candidate),i.socket.send({type:O.Candidate,payload:{candidate:e.candidate,type:r,connectionId:n},dst:t}))},e.oniceconnectionstatechange=()=>{switch(e.iceConnectionState){case"failed":eI.log("iceConnectionState is failed, closing connections to "+t),this.connection.emitError(D.NegotiationFailed,"Negotiation of connection to "+t+" failed."),this.connection.close();break;case"closed":eI.log("iceConnectionState is closed, closing connections to "+t),this.connection.emitError(D.ConnectionClosed,"Connection to "+t+" closed."),this.connection.close();break;case"disconnected":eI.log("iceConnectionState changed to disconnected on the connection with "+t);break;case"completed":e.onicecandidate=()=>{}}this.connection.emit("iceStateChanged",e.iceConnectionState)},eI.log("Listening for data channel"),e.ondatachannel=e=>{eI.log("Received data channel");let r=e.channel;i.getConnection(t,n)._initializeDataChannel(r)},eI.log("Listening for remote stream"),e.ontrack=e=>{eI.log("Received remote stream");let r=e.streams[0],o=i.getConnection(t,n);o.type===w.Media&&this._addStreamToMediaConnection(r,o)}}cleanup(){eI.log("Cleaning up PeerConnection to "+this.connection.peer);let e=this.connection.peerConnection;if(!e)return;this.connection.peerConnection=null,e.onicecandidate=e.oniceconnectionstatechange=e.ondatachannel=e.ontrack=()=>{};let t="closed"!==e.signalingState,n=!1,r=this.connection.dataChannel;r&&(n=!!r.readyState&&"closed"!==r.readyState),(t||n)&&e.close()}async _makeOffer(){let e=this.connection.peerConnection,t=this.connection.provider;try{let n=await e.createOffer(this.connection.options.constraints);eI.log("Created offer."),this.connection.options.sdpTransform&&"function"==typeof this.connection.options.sdpTransform&&(n.sdp=this.connection.options.sdpTransform(n.sdp)||n.sdp);try{await e.setLocalDescription(n),eI.log("Set localDescription:",n,`for:${this.connection.peer}`);let r={sdp:n,type:this.connection.type,connectionId:this.connection.connectionId,metadata:this.connection.metadata};if(this.connection.type===w.Data){let e=this.connection;r={...r,label:e.label,reliable:e.reliable,serialization:e.serialization}}t.socket.send({type:O.Offer,payload:r,dst:this.connection.peer})}catch(e){"OperationError: Failed to set local offer sdp: Called in wrong state: kHaveRemoteOffer"!=e&&(t.emitError(E.WebRTC,e),eI.log("Failed to setLocalDescription, ",e))}}catch(e){t.emitError(E.WebRTC,e),eI.log("Failed to createOffer, ",e)}}async _makeAnswer(){let e=this.connection.peerConnection,t=this.connection.provider;try{let n=await e.createAnswer();eI.log("Created answer."),this.connection.options.sdpTransform&&"function"==typeof this.connection.options.sdpTransform&&(n.sdp=this.connection.options.sdpTransform(n.sdp)||n.sdp);try{await e.setLocalDescription(n),eI.log("Set localDescription:",n,`for:${this.connection.peer}`),t.socket.send({type:O.Answer,payload:{sdp:n,type:this.connection.type,connectionId:this.connection.connectionId},dst:this.connection.peer})}catch(e){t.emitError(E.WebRTC,e),eI.log("Failed to setLocalDescription, ",e)}}catch(e){t.emitError(E.WebRTC,e),eI.log("Failed to create answer, ",e)}}async handleSDP(e,t){t=new RTCSessionDescription(t);let n=this.connection.peerConnection,r=this.connection.provider;eI.log("Setting remote description",t);try{await n.setRemoteDescription(t),eI.log(`Set remoteDescription:${e} for:${this.connection.peer}`),"OFFER"===e&&await this._makeAnswer()}catch(e){r.emitError(E.WebRTC,e),eI.log("Failed to setRemoteDescription, ",e)}}async handleCandidate(e){eI.log("handleCandidate:",e);try{await this.connection.peerConnection.addIceCandidate(e),eI.log(`Added ICE candidate for:${this.connection.peer}`)}catch(e){this.connection.provider.emitError(E.WebRTC,e),eI.log("Failed to handleCandidate, ",e)}}_addTracksToConnection(e,t){if(eI.log(`add tracks from stream ${e.id} to peer connection`),!t.addTrack)return eI.error("Your browser does't support RTCPeerConnection#addTrack. Ignored.");e.getTracks().forEach(n=>{t.addTrack(n,e)})}_addStreamToMediaConnection(e,t){eI.log(`add stream ${e.id} to media connection ${t.connectionId}`),t.addStream(e)}constructor(e){this.connection=e}}class eJ extends eM.EventEmitter{emitError(e,t){eI.error("Error:",t),this.emit("error",new eV(`${e}`,t))}}class eV extends Error{constructor(e,t){"string"==typeof t?super(t):(super(),Object.assign(this,t)),this.type=e}}class eG extends eJ{get open(){return this._open}constructor(e,t,n){super(),this.peer=e,this.provider=t,this.options=n,this._open=!1,this.metadata=n.metadata}}class eW extends eG{get type(){return w.Media}get localStream(){return this._localStream}get remoteStream(){return this._remoteStream}_initializeDataChannel(e){this.dataChannel=e,this.dataChannel.onopen=()=>{eI.log(`DC#${this.connectionId} dc connection success`),this.emit("willCloseOnRemote")},this.dataChannel.onclose=()=>{eI.log(`DC#${this.connectionId} dc closed for:`,this.peer),this.close()}}addStream(e){eI.log("Receiving stream",e),this._remoteStream=e,super.emit("stream",e)}handleMessage(e){let t=e.type,n=e.payload;switch(e.type){case O.Answer:this._negotiator.handleSDP(t,n.sdp),this._open=!0;break;case O.Candidate:this._negotiator.handleCandidate(n.candidate);break;default:eI.warn(`Unrecognized message type:${t} from peer:${this.peer}`)}}answer(e,t={}){if(this._localStream){eI.warn("Local stream already exists on this MediaConnection. Are you answering a call twice?");return}for(let n of(this._localStream=e,t&&t.sdpTransform&&(this.options.sdpTransform=t.sdpTransform),this._negotiator.startConnection({...this.options._payload,_stream:e}),this.provider._getMessages(this.connectionId)))this.handleMessage(n);this._open=!0}close(){this._negotiator&&(this._negotiator.cleanup(),this._negotiator=null),this._localStream=null,this._remoteStream=null,this.provider&&(this.provider._removeConnection(this),this.provider=null),this.options&&this.options._stream&&(this.options._stream=null),this.open&&(this._open=!1,super.emit("close"))}constructor(e,t,n){super(e,t,n),this._localStream=this.options._stream,this.connectionId=this.options.connectionId||eW.ID_PREFIX+ex.randomToken(),this._negotiator=new e$(this),this._localStream&&this._negotiator.startConnection({_stream:this._localStream,originator:!0})}}eW.ID_PREFIX="mc_";class eH{_buildRequest(e){let t=this._options.secure?"https":"http",{host:n,port:r,path:i,key:o}=this._options,s=new URL(`${t}://${n}:${r}${i}${o}/${e}`);return s.searchParams.set("ts",`${Date.now()}${Math.random()}`),s.searchParams.set("version",ez.version),fetch(s.href,{referrerPolicy:this._options.referrerPolicy})}async retrieveId(){try{let e=await this._buildRequest("id");if(200!==e.status)throw Error(`Error. Status:${e.status}`);return e.text()}catch(t){eI.error("Error retrieving ID",t);let e="";throw"/"===this._options.path&&this._options.host!==ex.CLOUD_HOST&&(e=" If you passed in a `path` to your self-hosted PeerServer, you'll also need to pass in that same path when creating a new Peer."),Error("Could not get an ID from the server."+e)}}async listAllPeers(){try{let e=await this._buildRequest("peers");if(200!==e.status){if(401===e.status){let e="";throw e=this._options.host===ex.CLOUD_HOST?"It looks like you're using the cloud server. You can email team@peerjs.com to enable peer listing for your API key.":"You need to enable `allow_discovery` on your self-hosted PeerServer to use this feature.",Error("It doesn't look like you have permission to list peers IDs. "+e)}throw Error(`Error. Status:${e.status}`)}return e.json()}catch(e){throw eI.error("Error retrieving list peers",e),Error("Could not get list peers from the server."+e)}}constructor(e){this._options=e}}class eY extends eG{get type(){return w.Data}_initializeDataChannel(e){this.dataChannel=e,this.dataChannel.onopen=()=>{eI.log(`DC#${this.connectionId} dc connection success`),this._open=!0,this.emit("open")},this.dataChannel.onmessage=e=>{eI.log(`DC#${this.connectionId} dc onmessage:`,e.data)},this.dataChannel.onclose=()=>{eI.log(`DC#${this.connectionId} dc closed for:`,this.peer),this.close()}}close(e){if(e?.flush){this.send({__peerData:{type:"close"}});return}this._negotiator&&(this._negotiator.cleanup(),this._negotiator=null),this.provider&&(this.provider._removeConnection(this),this.provider=null),this.dataChannel&&(this.dataChannel.onopen=null,this.dataChannel.onmessage=null,this.dataChannel.onclose=null,this.dataChannel=null),this.open&&(this._open=!1,super.emit("close"))}send(e,t=!1){if(!this.open){this.emitError(x.NotOpenYet,"Connection is not open. You should listen for the `open` event before sending messages.");return}return this._send(e,t)}async handleMessage(e){let t=e.payload;switch(e.type){case O.Answer:await this._negotiator.handleSDP(e.type,t.sdp);break;case O.Candidate:await this._negotiator.handleCandidate(t.candidate);break;default:eI.warn("Unrecognized message type:",e.type,"from peer:",this.peer)}}constructor(e,t,n){super(e,t,n),this.connectionId=this.options.connectionId||eY.ID_PREFIX+eE(),this.label=this.options.label||this.connectionId,this.reliable=!!this.options.reliable,this._negotiator=new e$(this),this._negotiator.startConnection(this.options._payload||{originator:!0,reliable:this.reliable})}}eY.ID_PREFIX="dc_",eY.MAX_BUFFERED_AMOUNT=8388608;class eK extends eY{get bufferSize(){return this._bufferSize}_initializeDataChannel(e){super._initializeDataChannel(e),this.dataChannel.binaryType="arraybuffer",this.dataChannel.addEventListener("message",e=>this._handleDataMessage(e))}_bufferedSend(e){(this._buffering||!this._trySend(e))&&(this._buffer.push(e),this._bufferSize=this._buffer.length)}_trySend(e){if(!this.open)return!1;if(this.dataChannel.bufferedAmount>eY.MAX_BUFFERED_AMOUNT)return this._buffering=!0,setTimeout(()=>{this._buffering=!1,this._tryBuffer()},50),!1;try{this.dataChannel.send(e)}catch(e){return eI.error(`DC#:${this.connectionId} Error when sending:`,e),this._buffering=!0,this.close(),!1}return!0}_tryBuffer(){if(!this.open||0===this._buffer.length)return;let e=this._buffer[0];this._trySend(e)&&(this._buffer.shift(),this._bufferSize=this._buffer.length,this._tryBuffer())}close(e){if(e?.flush){this.send({__peerData:{type:"close"}});return}this._buffer=[],this._bufferSize=0,super.close()}constructor(...e){super(...e),this._buffer=[],this._bufferSize=0,this._buffering=!1}}class eX extends eK{close(e){super.close(e),this._chunkedData={}}_handleDataMessage({data:e}){let t=i(e),n=t.__peerData;if(n){if("close"===n.type){this.close();return}this._handleChunk(t);return}this.emit("data",t)}_handleChunk(e){let t=e.__peerData,n=this._chunkedData[t]||{data:[],count:0,total:e.total};if(n.data[e.n]=new Uint8Array(e.data),n.count++,this._chunkedData[t]=n,n.total===n.count){delete this._chunkedData[t];let e=function(e){let t=0;for(let n of e)t+=n.byteLength;let n=new Uint8Array(t),r=0;for(let t of e)n.set(t,r),r+=t.byteLength;return n}(n.data);this._handleDataMessage({data:e})}}_send(e,t){let n=o(e);if(n instanceof Promise)return this._send_blob(n);if(!t&&n.byteLength>this.chunker.chunkedMTU){this._sendChunks(n);return}this._bufferedSend(n)}async _send_blob(e){let t=await e;if(t.byteLength>this.chunker.chunkedMTU){this._sendChunks(t);return}this._bufferedSend(t)}_sendChunks(e){let t=this.chunker.chunk(e);for(let e of(eI.log(`DC#${this.connectionId} Try to send ${t.length} chunks...`),t))this.send(e,!0)}constructor(e,t,r){super(e,t,r),this.chunker=new n,this.serialization=I.Binary,this._chunkedData={}}}class eq extends eK{_handleDataMessage({data:e}){super.emit("data",e)}_send(e,t){this._bufferedSend(e)}constructor(...e){super(...e),this.serialization=I.None}}class eQ extends eK{_handleDataMessage({data:e}){let t=this.parse(this.decoder.decode(e)),n=t.__peerData;if(n&&"close"===n.type){this.close();return}this.emit("data",t)}_send(e,t){let n=this.encoder.encode(this.stringify(e));if(n.byteLength>=ex.chunkedMTU){this.emitError(x.MessageToBig,"Message too big for JSON channel");return}this._bufferedSend(n)}constructor(...e){super(...e),this.serialization=I.JSON,this.encoder=new TextEncoder,this.decoder=new TextDecoder,this.stringify=JSON.stringify,this.parse=JSON.parse}}class eZ extends eJ{get id(){return this._id}get options(){return this._options}get open(){return this._open}get socket(){return this._socket}get connections(){let e=Object.create(null);for(let[t,n]of this._connections)e[t]=n;return e}get destroyed(){return this._destroyed}get disconnected(){return this._disconnected}_createServerConnection(){let e=new eN(this._options.secure,this._options.host,this._options.port,this._options.path,this._options.key,this._options.pingInterval);return e.on(M.Message,e=>{this._handleMessage(e)}),e.on(M.Error,e=>{this._abort(E.SocketError,e)}),e.on(M.Disconnected,()=>{this.disconnected||(this.emitError(E.Network,"Lost connection to server."),this.disconnect())}),e.on(M.Close,()=>{this.disconnected||this._abort(E.SocketClosed,"Underlying socket is already closed.")}),e}_initialize(e){this._id=e,this.socket.start(e,this._options.token)}_handleMessage(e){let t=e.type,n=e.payload,r=e.src;switch(t){case O.Open:this._lastServerId=this.id,this._open=!0,this.emit("open",this.id);break;case O.Error:this._abort(E.ServerError,n.msg);break;case O.IdTaken:this._abort(E.UnavailableID,`ID "${this.id}" is taken`);break;case O.InvalidKey:this._abort(E.InvalidKey,`API KEY "${this._options.key}" is invalid`);break;case O.Leave:eI.log(`Received leave message from ${r}`),this._cleanupPeer(r),this._connections.delete(r);break;case O.Expire:this.emitError(E.PeerUnavailable,`Could not connect to peer ${r}`);break;case O.Offer:{let e=n.connectionId,t=this.getConnection(r,e);if(t&&(t.close(),eI.warn(`Offer received for existing Connection ID:${e}`)),n.type===w.Media){let i=new eW(r,this,{connectionId:e,_payload:n,metadata:n.metadata});t=i,this._addConnection(r,t),this.emit("call",i)}else if(n.type===w.Data){let i=new this._serializers[n.serialization](r,this,{connectionId:e,_payload:n,metadata:n.metadata,label:n.label,serialization:n.serialization,reliable:n.reliable});t=i,this._addConnection(r,t),this.emit("connection",i)}else{eI.warn(`Received malformed connection type:${n.type}`);return}for(let n of this._getMessages(e))t.handleMessage(n);break}default:{if(!n){eI.warn(`You received a malformed message from ${r} of type ${t}`);return}let i=n.connectionId,o=this.getConnection(r,i);o&&o.peerConnection?o.handleMessage(e):i?this._storeMessage(i,e):eI.warn("You received an unrecognized message:",e)}}}_storeMessage(e,t){this._lostMessages.has(e)||this._lostMessages.set(e,[]),this._lostMessages.get(e).push(t)}_getMessages(e){let t=this._lostMessages.get(e);return t?(this._lostMessages.delete(e),t):[]}connect(e,t={}){if(t={serialization:"default",...t},this.disconnected){eI.warn("You cannot connect to a new Peer because you called .disconnect() on this Peer and ended your connection with the server. You can create a new Peer to reconnect, or call reconnect on this peer if you believe its ID to still be available."),this.emitError(E.Disconnected,"Cannot connect to new Peer after disconnecting from server.");return}let n=new this._serializers[t.serialization](e,this,t);return this._addConnection(e,n),n}call(e,t,n={}){if(this.disconnected){eI.warn("You cannot connect to a new Peer because you called .disconnect() on this Peer and ended your connection with the server. You can create a new Peer to reconnect."),this.emitError(E.Disconnected,"Cannot connect to new Peer after disconnecting from server.");return}if(!t){eI.error("To call a peer, you must provide a stream from your browser's `getUserMedia`.");return}let r=new eW(e,this,{...n,_stream:t});return this._addConnection(e,r),r}_addConnection(e,t){eI.log(`add connection ${t.type}:${t.connectionId} to peerId:${e}`),this._connections.has(e)||this._connections.set(e,[]),this._connections.get(e).push(t)}_removeConnection(e){let t=this._connections.get(e.peer);if(t){let n=t.indexOf(e);-1!==n&&t.splice(n,1)}this._lostMessages.delete(e.connectionId)}getConnection(e,t){let n=this._connections.get(e);if(!n)return null;for(let e of n)if(e.connectionId===t)return e;return null}_delayedAbort(e,t){setTimeout(()=>{this._abort(e,t)},0)}_abort(e,t){eI.error("Aborting!"),this.emitError(e,t),this._lastServerId?this.disconnect():this.destroy()}destroy(){this.destroyed||(eI.log(`Destroy peer with ID:${this.id}`),this.disconnect(),this._cleanup(),this._destroyed=!0,this.emit("close"))}_cleanup(){for(let e of this._connections.keys())this._cleanupPeer(e),this._connections.delete(e);this.socket.removeAllListeners()}_cleanupPeer(e){let t=this._connections.get(e);if(t)for(let e of t)e.close()}disconnect(){if(this.disconnected)return;let e=this.id;eI.log(`Disconnect peer with ID:${e}`),this._disconnected=!0,this._open=!1,this.socket.close(),this._lastServerId=e,this._id=null,this.emit("disconnected",e)}reconnect(){if(this.disconnected&&!this.destroyed)eI.log(`Attempting reconnection to server with ID ${this._lastServerId}`),this._disconnected=!1,this._initialize(this._lastServerId);else if(this.destroyed)throw Error("This peer cannot reconnect to the server. It has already been destroyed.");else if(this.disconnected||this.open)throw Error(`Peer ${this.id} cannot reconnect because it is not disconnected from the server!`);else eI.error("In a hurry? We're still trying to make the initial connection!")}listAllPeers(e=e=>{}){this._api.listAllPeers().then(t=>e(t)).catch(e=>this._abort(E.ServerError,e))}constructor(e,t){let n;if(super(),this._serializers={raw:eq,json:eQ,binary:eX,"binary-utf8":eX,default:eX},this._id=null,this._lastServerId=null,this._destroyed=!1,this._disconnected=!1,this._open=!1,this._connections=new Map,this._lostMessages=new Map,e&&e.constructor==Object?t=e:e&&(n=e.toString()),t={debug:0,host:ex.CLOUD_HOST,port:ex.CLOUD_PORT,path:"/",key:eZ.DEFAULT_KEY,token:ex.randomToken(),config:ex.defaultConfig,referrerPolicy:"strict-origin-when-cross-origin",serializers:{},...t},this._options=t,this._serializers={...this._serializers,...this.options.serializers},"/"===this._options.host&&(this._options.host=window.location.hostname),this._options.path&&("/"!==this._options.path[0]&&(this._options.path="/"+this._options.path),"/"!==this._options.path[this._options.path.length-1]&&(this._options.path+="/")),void 0===this._options.secure&&this._options.host!==ex.CLOUD_HOST?this._options.secure=ex.isSecure():this._options.host==ex.CLOUD_HOST&&(this._options.secure=!0),this._options.logFunction&&eI.setLogFunction(this._options.logFunction),eI.logLevel=this._options.debug||0,this._api=new eH(t),this._socket=this._createServerConnection(),!ex.supports.audioVideo&&!ex.supports.data){this._delayedAbort(E.BrowserIncompatible,"The current browser does not support WebRTC");return}if(n&&!ex.validateId(n)){this._delayedAbort(E.InvalidID,`ID "${n}" is invalid`);return}n?this._initialize(n):this._api.retrieveId().then(e=>this._initialize(e)).catch(e=>this._abort(E.ServerError,e))}}eZ.DEFAULT_KEY="peerjs",window.peerjs={Peer:eZ,util:ex},window.Peer=eZ})();
+
+</script>
+<script>
+/* =========================================================
+   1. 물때 · 날씨 계산 (교사·학생 화면이 같은 결과를 내도록 '게임 코드'로 고정)
+   ========================================================= */
+const NEED=540;      // 세곡선이 뜨는 물높이(cm, 수업용 어림값)
+const MSL=300;       // 평균 해수면(cm, 어림값)
+/* 법성포 조석 어림 계산: 주요 분조 7개(M2 달 · S2 해 · N2 · K1 · O1 · 얕은 바다 M4 · MS4)를 더해요.
+   위상은 바다타임 2026년 11·12월 법성포 만조·간조 시각에 맞췄어요.
+   물높이는 시각 계산의 모양을 그대로 두고, 날마다 사리·조금 크기(M2+S2 어울림)로 맞춰 키우거나 줄여요.
+   → 사리 만조 약 6.2~6.4m, 조금 만조 약 4.9~5.3m (수업용 어림값)
+   [각속도(°/시), 진폭(cm), 위상(°, 2026-11-01 0시 기준)] */
+const TC={M2:[28.9841042,190.0,217.9],S2:[30,59.2,113.1],N2:[28.4397295,51.0,224.9],K1:[15.0410686,40.5,307.3],O1:[13.9430356,25.6,329.7],M4:[57.9682084,7.1,8.3],MS4:[58.9841042,1.4,260.1]};
+const EPOCH=Math.floor(Date.UTC(2026,10,1)/86400000);
+const AMP=200, SR=0.31;   // 물높이용: M2 진폭(cm), S2/M2 비
+function dayAmp(dn){const x=(dn-EPOCH)*24+12,psi=((TC.S2[0]-TC.M2[0])*x-(TC.S2[2]-TC.M2[2]))*Math.PI/180;return AMP*Math.sqrt(1+SR*SR+2*SR*Math.cos(psi))}
+function tideRaw(dn,t){const x=(dn-EPOCH)*24+t;let s=0;for(const k in TC){const [w,a,g]=TC[k];s+=a*Math.cos((w*x-g)*Math.PI/180)}return s}
+const TOP=700;       // 그래프 위쪽 끝(cm)
+const SHIPS=3;
+const SUN=[[7.67,17.67],[7.33,18.17],[6.75,18.67],[6.08,19.08],[5.58,19.5],[5.42,19.83],[5.58,19.83],[5.92,19.42],[6.33,18.75],[6.75,18.08],[7.17,17.58],[7.58,17.42]]; // 영광 어림 일출·일몰
+function newMoonJDE(k){const T=k/1236.85,r=Math.PI/180;let J=2451550.09766+29.530588861*k+0.00015437*T*T-0.00000015*T*T*T+0.00000000073*T**4;const E=1-0.002516*T-0.0000074*T*T,M=(2.5534+29.1053567*k-0.0000014*T*T)*r,Mp=(201.5643+385.81693528*k+0.0107582*T*T+0.00001238*T**3)*r,F=(160.7108+390.67050284*k-0.0016118*T*T-0.00000227*T**3)*r,Om=(124.7746-1.56375588*k+0.0020672*T*T)*r;J+=-0.4072*Math.sin(Mp)+0.17241*E*Math.sin(M)+0.01608*Math.sin(2*Mp)+0.01039*Math.sin(2*F)+0.00739*E*Math.sin(Mp-M)-0.00514*E*Math.sin(Mp+M)+0.00208*E*E*Math.sin(2*M)-0.00111*Math.sin(Mp-2*F)-0.00057*Math.sin(Mp+2*F)+0.00056*E*Math.sin(2*Mp+M)-0.00042*Math.sin(3*Mp)+0.00042*E*Math.sin(M+2*F)+0.00038*E*Math.sin(M-2*F)-0.00024*E*Math.sin(2*Mp-M)-0.00017*Math.sin(Om);return J}
+const kstDN=j=>Math.floor(((j-2440587.5)*86400000-69000+9*3600000)/86400000);
+const DN=(y,m,d)=>Math.floor(Date.UTC(y,m-1,d)/86400000);
+// 음력 날짜. 음력 '달' 숫자는 2026-11-09 = 음력 10월 1일을 기준으로 세요(윤달이 없는 2025년 8월 ~ 2028년 5월에만 표시).
+const KREF=(()=>{const t=DN(2026,11,9);let k=Math.floor((2026+10/12-2000)*12.3685)-2;for(let i=0;i<6;i++)if(kstDN(newMoonJDE(k+i))===t)return k+i;return null})();
+function lunarDate(y,m,d){const t=DN(y,m,d);let k=Math.floor((y+(m-1)/12-2000)*12.3685)-2,b=null,bk=null;for(let i=0;i<6;i++){const n=kstDN(newMoonJDE(k+i));if(n<=t){b=n;bk=k+i}}
+  const off=KREF===null?99:bk-KREF;return {ld:t-b+1,lm:(off>=-15&&off<=19)?(((9+off)%12)+12)%12+1:null}}
+function lunarDay(y,m,d){return lunarDate(y,m,d).ld}
+const MT=['7물','8물','9물','10물','11물','12물','13물','조금','무시','1물','2물','3물','4물','5물','6물'];
+function hs(...a){let h=2166136261;for(const ch of a.join('|')){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
+function rnd(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const WX={
+  sun:{ic:'☀️',nm:'맑음',ds:'바다가 잔잔해요.'},
+  cloud:{ic:'⛅',nm:'구름 조금',ds:'출항하기 괜찮아요.'},
+  wind:{ic:'🌬️',nm:'순풍',ds:'돛에 바람이 알맞게 불어요! (+3점)'},
+  fog:{ic:'🌫️',nm:'아침 안개',ds:'오전 11시까지 짙은 안개가 껴요.'},
+  storm:{ic:'🌊',nm:'풍랑주의보',ds:'파도가 아주 높아요. 배를 띄우면 위험해요!'}};
+const WC={};
+function monthWeather(seed,y,m){
+  const key=seed+'-'+y+'-'+m; if(WC[key])return WC[key];
+  const r=rnd(hs('wx',seed,y,m)), winter=[12,1,2].includes(m), out=[null]; let prev='sun';
+  for(let d=1;d<=31;d++){
+    let w; const ps=prev==='storm'?0.4:(winter?0.14:0.07);
+    if(r()<ps)w='storm'; else{const p=r();w=p<0.13?'fog':p<0.30?'wind':p<0.52?'cloud':'sun'}
+    out.push(w);prev=w;
+  }
+  return WC[key]=out;
+}
+const DI={};
+function dayInfo(seed,y,m,d){
+  const key=seed+'-'+y+'-'+m+'-'+d;if(DI[key])return DI[key];
+  const {ld,lm}=lunarDate(y,m,d), i=(ld-1)%15, dn=DN(y,m,d);
+  const hw=[],lw=[];let p=tideRaw(dn,-1/60),c=tideRaw(dn,0),ex=[];   // 1분 간격으로 만조·간조 찾기
+  for(let k=0;k<1440;k++){const t=k/60,n=tideRaw(dn,t+1/60);if(c>p&&c>=n){hw.push(t);ex.push(c)}if(c<p&&c<=n){lw.push(t);ex.push(-c)}p=c;c=n}
+  const sc=dayAmp(dn)/(ex.reduce((a,v)=>a+v,0)/ex.length);   // 그날 물높이 크기 맞추기
+  const kind=(i<=2)?'sari':(i===7||i===8)?'jogeum':'mid';
+  const w=monthWeather(seed,y,m)[d];
+  const [rise,set]=SUN[m-1];
+  return DI[key]={y,m,d,dn,sc,ld,lm,i,name:MT[i],kind,hw,lw,w,rise,set,fogUntil:w==='fog'?11:0};
+}
+const level=(I,t)=>MSL+tideRaw(I.dn,t)*I.sc;
+const ldText=I=>I.lm?`(${I.lm}.${I.ld})`:`음${I.ld}`;
+const tideList=I=>[...I.hw.map(t=>[t,1]),...I.lw.map(t=>[t,0])].sort((a,b)=>a[0]-b[0]);
+function evaluate(I,t){
+  const lv=Math.round(level(I,t));
+  if(I.w==='storm')return {k:'storm',ic:'💥',pts:-10,lv,msg:'풍랑주의보에 떠나서 배가 부서졌어요!'};
+  if(t<I.rise||t>I.set)return {k:'night',ic:'🌙',pts:-5,lv,msg:'캄캄한 밤이라 뱃길을 잃고 되돌아왔어요.'};
+  if(t<I.fogUntil)return {k:'fog',ic:'🌫️',pts:-5,lv,msg:'안개 때문에 앞이 안 보여 되돌아왔어요.'};
+  if(lv<NEED)return {k:'stuck',ic:'🟫',pts:-5,lv,msg:'물이 얕아서 세곡선이 갯벌에 걸렸어요.'};
+  const dt=Math.min(...I.hw.map(h=>Math.abs(h-t)));
+  let pts=10;const why=['출항 성공 +10'];
+  if(dt<=0.5){pts+=5;why.push('만조 딱 맞춤 +5')}else if(dt<=1){pts+=3;why.push('만조 가까이 +3')}
+  if(I.w==='wind'){pts+=3;why.push('순풍 +3')}
+  return {k:'ok',ic:'✅',pts,lv,msg:'물이 넉넉해서 세곡선이 미끄러지듯 떠났어요!',why};
+}
+function windows(I){ // 성공 가능한 시간대(해설용)
+  const out=[];let s=null;
+  for(let k=0;k<=144;k++){const t=k/6, ok=k<144&&evaluate(I,t).pts>0;if(ok&&s===null)s=t;if(!ok&&s!==null){out.push([s,t-1/6]);s=null}}
+  return out;
+}
+const pad=n=>String(n).padStart(2,'0');
+function hhmm(t){const mm=Math.round(t*60);return pad(Math.floor(mm/60)%24)+':'+pad(mm%60)}
+const DOW=['일','월','화','수','목','금','토'];
+function ymAdd(y,m,k){m+=k;while(m>12){m-=12;y++}while(m<1){m+=12;y--}return [y,m]}
+function yearFor(m){const n=new Date(),Y=n.getFullYear(),M=n.getMonth()+1;for(const y of [Y-1,Y,Y+1]){const df=(y-Y)*12+(m-M);if(df>=-3&&df<=10)return y}return Y}
+function chk(seed,team,round,score){const a='ACEFHJKLMNPRTWXY',h=hs('chk',seed,team,round,score);return a[h%16]+a[(h>>>4)%16]+a[(h>>>8)%16]}
+const kindCls=k=>k==='sari'?'b-sari':k==='jogeum'?'b-jogeum':'b-mid';
+const tideLabel=I=>I.name+(I.kind==='sari'?' 사리':'');
+
+/* =========================================================
+   2. 공통 화면 도구
+   ========================================================= */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const COLORS=['#e4572e','#2e86ab','#3bb273','#f2a541','#8e5ccd','#e94f8a','#16a3a0','#7a5c3e'];
+const PEER_PREFIX='ygsegok2-';
+const QS=new URLSearchParams(location.search);   // 학교 자체 연결 서버를 쓸 때: ?peerhost=주소&peerport=9000
+const PEER_OPT=QS.get('peerhost')?{host:QS.get('peerhost'),port:+(QS.get('peerport')||9000),path:QS.get('peerpath')||'/',secure:QS.get('peersecure')==='1',debug:0}:{debug:0};
+function show(id){['home','tSetup','tRun','sJoin','sPlay'].forEach(x=>$(x).classList.toggle('hidden',x!==id));$('homeBtn').classList.toggle('hidden',id==='home')}
+function openModal(h){$('modalBody').innerHTML=h;$('modal').classList.remove('hidden')}
+function closeModal(){$('modal').classList.add('hidden')}
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),1600)}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let AC=null;
+function beep(ok){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);o.type=ok?'triangle':'sawtooth';o.frequency.setValueAtTime(ok?660:200,AC.currentTime);if(ok)o.frequency.setValueAtTime(880,AC.currentTime+.1);g.gain.setValueAtTime(.08,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.35);o.start();o.stop(AC.currentTime+.36)}catch(e){}}
+function confetti(){for(let i=0;i<90;i++){const c=document.createElement('div');c.className='conf';c.style.left=Math.random()*100+'vw';c.style.background=COLORS[i%COLORS.length];c.style.animationDuration=(2+Math.random()*2.5)+'s';c.style.animationDelay=Math.random()*.8+'s';document.body.appendChild(c);setTimeout(()=>c.remove(),5200)}}
+const store={get:k=>{try{return JSON.parse(localStorage.getItem(k)||'null')}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
+const fmtLeft=s=>s<0?'--:--':Math.floor(s/60)+':'+pad(s%60);
+const flagHTML=(i,c)=>`<span class="flag" style="background:${c}">${i+1}</span>`;
+
+$('homeBtn').onclick=()=>{if(confirm('처음 화면으로 갈까요? 지금 게임 기록이 지워져요.')){store.del('segok2-t');store.del('segok2-s');location.reload()}};
+$('goTeacher').onclick=()=>{drawTeamInputs();show('tSetup')};
+$('goStudent').onclick=()=>{show('sJoin');$('jCode').focus()};
+$('modal').onclick=e=>{if(e.target.id==='modal'&&$('modal').dataset.lock!=='1')closeModal()};
+
+/* =========================================================
+   3. 선생님 화면
+   ========================================================= */
+let names=['1모둠','2모둠','3모둠','4모둠','5모둠','6모둠'];
+function drawTeamInputs(){
+  $('teamList').innerHTML=names.map((n,i)=>`<div class="teamrow">${flagHTML(i,COLORS[i])}<input value="${esc(n)}" data-i="${i}" maxlength="8"></div>`).join('');
+  $('teamList').querySelectorAll('input').forEach(el=>el.oninput=e=>names[+e.target.dataset.i]=e.target.value);
+  planTip();
+}
+$('addTeam').onclick=()=>{if(names.length<8){names.push((names.length+1)+'모둠');drawTeamInputs()}};
+$('delTeam').onclick=()=>{if(names.length>2){names.pop();drawTeamInputs()}};
+(function fillYM(){const n=new Date();const o=[];for(let i=-2;i<10;i++){const [y,m]=ymAdd(n.getFullYear(),n.getMonth()+1,i);o.push(`<option value="${y}-${m}" ${i===0?'selected':''}>${y}년 ${m}월</option>`)}$('ym').innerHTML=o.join('')})();
+function planTip(){const r=+$('rounds').value,mi=+$('mins').value;const play=r*(mi+2);$('planTip').innerHTML=`⏱ 예상 시간: 라운드 ${r}번 × (고르기 ${mi}분 + 공개·이야기 2분) ≈ <b>${play}분</b><br>도입 8분과 정리 8분을 더하면 약 <b>${play+16}분</b>이에요. (초등 40분 · 중학교 45분 수업)`}
+['rounds','mins'].forEach(id=>$(id).onchange=planTip);
+
+let T=null,tPeer=null,tTries=0;const tConns=new Map();
+const codeOf=o=>pad(o.m0)+String(o.seed).padStart(3,'0');
+function tSave(){store.set('segok2-t',T)}
+$('tStart').onclick=()=>{
+  const [y,m]=$('ym').value.split('-').map(Number);
+  T={y0:y,m0:m,seed:Math.floor(Math.random()*1000),rounds:+$('rounds').value,mins:+$('mins').value,speed:+$('speed').value,
+     teams:names.map((n,i)=>({name:n.trim()||((i+1)+'모둠'),color:COLORS[i],res:{}})),round:0,phase:'lobby',revealed:{},endAt:0,net:'wait'};
+  T.code=codeOf(T); tSave(); show('tRun'); tOpenPeer(); tRender();
+};
+function tOpenPeer(){
+  if(!window.Peer){T.net='off';tRender();return}
+  try{if(tPeer)tPeer.destroy()}catch(e){}
+  T.net='wait';
+  tPeer=new Peer(PEER_PREFIX+T.code,PEER_OPT);
+  tPeer.on('open',()=>{T.net='on';tTries=0;tRender()});
+  tPeer.on('connection',c=>{
+    c.on('open',()=>{tConns.set(c.peer,{c,team:null});tSend(c,tHello());tRender()});
+    c.on('data',d=>tOnData(c,d));
+    c.on('close',()=>{tConns.delete(c.peer);tRender()});
+  });
+  tPeer.on('disconnected',()=>{setTimeout(()=>{try{tPeer.reconnect()}catch(e){}},1500)});
+  tPeer.on('error',e=>{
+    if(e.type==='unavailable-id'){
+      const fresh=T.phase==='lobby'&&!T.teams.some(t=>Object.keys(t.res).length);
+      if(fresh){T.seed=(T.seed+137)%1000;T.code=codeOf(T);tSave();tOpenPeer();tRender();return}
+      if(tTries++<6){setTimeout(tOpenPeer,4000);return}   // 새로고침 직후 같은 코드를 다시 잡을 때
+    }
+    if(['network','server-error','socket-error','socket-closed','browser-incompatible','unavailable-id'].includes(e.type)){T.net='off';tRender()}
+  });
+}
+function tHello(){return {t:'hello',code:T.code,rounds:T.rounds,speed:T.speed,teams:T.teams.map(x=>x.name),round:T.round,open:T.phase==='play',left:T.phase==='play'?Math.max(0,Math.round((T.endAt-Date.now())/1000)):0}}
+function tSend(c,m){try{if(c.open)c.send(m)}catch(e){}}
+function tBroadcast(m){tConns.forEach(x=>tSend(x.c,m))}
+function tOnData(c,d){
+  if(!d||typeof d!=='object')return;
+  const x=tConns.get(c.peer);
+  if(d.t==='hi'){if(x&&Number.isInteger(d.team)&&T.teams[d.team])x.team=d.team;tSend(c,tHello());tRender()}
+  if(d.t==='join'&&x&&Number.isInteger(d.team)&&T.teams[d.team]){x.team=d.team;tSend(c,{t:'joined',team:d.team});tRender()}
+  if(d.t==='result'&&Number.isInteger(d.team)&&T.teams[d.team]&&d.round>=1&&d.round<=T.rounds){
+    if(d.check!==chk(T.seed,d.team,d.round,d.score))return;
+    if(!T.revealed[d.round])T.teams[d.team].res[d.round]={score:d.score,ships:d.ships||[],via:'net'};
+    tSend(c,{t:'ack',round:d.round});tSave();tRender();
+    if(d.round===T.round&&T.teams.every(t=>t.res[T.round]))toast('모든 모둠이 냈어요! 결과를 공개해요');
+  }
+}
+function tStartRound(){
+  T.round++;T.phase='play';T.endAt=Date.now()+T.mins*60000;tSave();
+  tBroadcast(tHello());tRender();
+}
+function tCloseRound(){if(T.phase!=='play')return;T.phase='closed';T.endAt=0;tSave();tBroadcast({t:'close',round:T.round});tBroadcast(tHello());tRender()}
+function tReveal(){
+  tCloseRound();
+  T.revealed[T.round]=true;T.phase='reveal';tSave();tRender();
+  const rk=T.teams.map((t,i)=>({...t,i,s:t.res[T.round]?t.res[T.round].score:null})).sort((a,b)=>(b.s??-999)-(a.s??-999));
+  let place=0,prev=null;
+  const rows=rk.map((t,j)=>{if(t.s!==prev)place=j;prev=t.s;return `<div>${t.s===null?'<span style="display:inline-block;width:22px"></span>':(['🥇','🥈','🥉'][place]||(place+1)+'.')} ${flagHTML(t.i,t.color)} <b>${esc(t.name)}</b> — ${t.s===null?'<span class="note">결과 없음</span>':`<b>${t.s}점</b> <span style="font-size:22px">${(t.res[T.round].ships||[]).map(s=>s.ic||'').join('')}</span>`}</div>`}).join('');
+  const [y,m]=ymAdd(T.y0,T.m0,T.round-1);
+  openModal(`<h2>🌕 ${T.round}라운드 결과 · ${y}년 ${m}월</h2><div class="rank">${rows}</div>
+    <div class="tip">점수가 높은 모둠은 어떤 물때, 몇 시에 배를 띄웠는지 물어봐요.</div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap"><button class="btn ghost" onclick="tAnswer()">📅 이번 달 정답 해설</button><button class="btn gold" onclick="closeModal()">확인</button></div>`);
+  beep(true);
+}
+function tAnswer(r){
+  r=r||T.round;const [y,m]=ymAdd(T.y0,T.m0,r-1);const first=new Date(y,m-1,1).getDay(),days=new Date(y,m,0).getDate();
+  let h=DOW.map(w=>`<b style="text-align:center;background:none;border:0;min-height:0">${w}</b>`).join('');
+  for(let i=0;i<first;i++)h+='<div style="background:none;border:0"></div>';
+  for(let d=1;d<=days;d++){const I=dayInfo(T.seed,y,m,d),ws=windows(I);h+=`<div class="${ws.length?'ok':''}"><b>${d}</b> ${WX[I.w].ic}<br><span class="badge ${kindCls(I.kind)}" style="font-size:10px">${I.name}</span><br>${ws.length?ws.map(w=>w[1]-w[0]<0.01?hhmm(w[0])+'만':hhmm(w[0])+'~'+hhmm(w[1])).join('<br>'):'✕'}</div>`}
+  openModal(`<h2>📅 ${y}년 ${m}월 정답 해설</h2><p style="margin:4px 0">초록 칸은 출항 성공이 가능한 날이고, 시각은 떠날 수 있는 시간대예요.</p><div class="anscal">${h}</div>
+   <div class="tip">찾아봐요: 성공할 수 있는 날은 음력 며칠 무렵에 몰려 있나요? 그날 만조는 몇 시쯤이었나요?</div>
+   <button class="btn gold" style="margin-top:12px" onclick="closeModal()">닫기</button>`);
+}
+function tFinish(){
+  T.phase='end';tSave();tRender();tBroadcast({t:'end'});
+  const tot=T.teams.map((t,i)=>({...t,i,s:tTotal(t)})).sort((a,b)=>b.s-a.s);
+  const ph=[150,110,80],ord=[1,0,2];
+  openModal(`<h2>🏆 최종 결과</h2><div class="podium">${ord.filter(i=>tot[i]).map(i=>`<div class="p" style="height:${ph[i]}px;background:${tot[i].color}"><div style="font-size:26px">${['🥇','🥈','🥉'][i]}</div>${esc(tot[i].name)}<div style="font-size:22px">${tot[i].s}점</div></div>`).join('')}</div>
+    <div class="tip"><b>생각해 봐요</b><br>① 출항에 성공한 날은 음력으로 며칠 무렵이었나요? 그날 달은 어떤 모양이었을까요?<br>② 같은 사리 날이라도 실패한 모둠이 있었다면, 무엇이 달랐을까요? (시각, 밤, 날씨)<br>③ 조선시대 법성포 사람들은 왜 물때와 날씨를 꼭 살펴야 했을까요?</div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:14px"><button class="btn ghost" onclick="closeModal()">순위표 보기</button><button class="btn gold" onclick="if(confirm('새 게임을 만들까요?')){store.del('segok2-t');location.reload()}">새 게임</button></div>`);
+  confetti();
+}
+const tTotal=t=>Object.entries(t.res).filter(([r])=>T.revealed[r]).reduce((a,[,v])=>a+v.score,0);
+function tRender(){
+  if(!T)return;
+  $('tCode').textContent=T.code;
+  const conn=[...tConns.values()];
+  $('tNet').innerHTML=T.net==='on'?`<span class="dot" style="background:var(--green)"></span> 실시간 연결 켜짐 · 태블릿 ${conn.length}대`:T.net==='wait'?'<span class="dot" style="background:var(--gold)"></span> 연결 준비 중…':'<span class="dot" style="background:var(--red)"></span> 실시간 연결 안 됨 → 아래 \'결과 코드로 입력하기\'를 써요';
+  const [y,m]=ymAdd(T.y0,T.m0,Math.max(0,T.round-1));
+  $('tRoundTxt').textContent=T.round?`${T.round} / ${T.rounds} 라운드 · ${y}년 ${m}월`:`${T.rounds}라운드 준비`;
+  // 버튼
+  let a='';
+  if(T.phase==='lobby')a=`<button class="btn gold" style="font-size:24px" onclick="tStartRound()">1라운드 시작 ▶</button><span class="tip" style="margin:0">모둠 태블릿에서 <b>참가 코드 ${T.code}</b>를 넣게 해 주세요.</span>`;
+  if(T.phase==='play')a=`<button class="btn red" onclick="tCloseRound()">⏹ 시간 끝내기</button><button class="btn gold" onclick="tReveal()">결과 공개 🎉</button>`;
+  if(T.phase==='closed')a=`<button class="btn gold" style="font-size:22px" onclick="tReveal()">결과 공개 🎉</button><span class="note">늦게 낸 결과도 공개 전까지 받아요.</span>`;
+  if(T.phase==='reveal')a=(T.round<T.rounds?`<button class="btn gold" style="font-size:22px" onclick="tStartRound()">${T.round+1}라운드 시작 ▶</button>`:`<button class="btn gold" style="font-size:22px" onclick="tFinish()">최종 결과 🏆</button>`)+`<button class="btn ghost" onclick="tAnswer()">📅 정답 해설</button>`;
+  if(T.phase==='end')a=`<button class="btn gold" onclick="tFinish()">🏆 시상대 다시 보기</button><button class="btn ghost" onclick="tAnswer()">📅 마지막 달 해설</button>`;
+  $('tActions').innerHTML=a;
+  if(T.net==='off'&&!T.mOpened){T.mOpened=true;$('mBox').open=true}
+  // 표
+  const online=new Set(conn.map(x=>x.team).filter(v=>v!==null));
+  let h=`<tr><th style="text-align:left">모둠</th>${Array.from({length:T.rounds},(_,i)=>`<th>${i+1}R</th>`).join('')}<th>합계</th></tr>`;
+  T.teams.forEach((t,i)=>{
+    h+=`<tr class="tr"><td><span class="dot" style="background:${online.has(i)?'var(--green)':'#c8d2d6'}" title="${online.has(i)?'연결됨':'연결 안 됨'}"></span> ${flagHTML(i,t.color)} <span class="nm">${esc(t.name)}</span></td>`;
+    for(let r=1;r<=T.rounds;r++){
+      const v=t.res[r];let c='<span class="note">-</span>';
+      if(T.revealed[r])c=v?`<b class="jua" style="font-size:20px">${v.score}</b>`:'<span class="note">없음</span>';
+      else if(r===T.round)c=v?'✅ <span class="note">냈어요</span>':(T.phase==='play'?'⏳':'<span class="note">기다림</span>');
+      h+=`<td>${c}</td>`;
+    }
+    h+=`<td class="tot">${tTotal(t)}</td></tr>`;
+  });
+  if(T.round&&!T.revealed[T.round]){const n=T.teams.filter(t=>t.res[T.round]).length;h+=`<tr><td colspan="${T.rounds+2}" class="jua" style="font-size:20px">제출 ${n} / ${T.teams.length} · 점수는 공개 버튼을 누르면 한꺼번에 보여요</td></tr>`}
+  $('tTable').innerHTML=h;
+  // 레이스
+  const tots=T.teams.map(tTotal),mx=Math.max(50,...tots);
+  $('lanes').innerHTML=T.teams.map((t,i)=>`<div class="lane"><div class="boat" style="left:${6+Math.max(0,tots[i])/mx*66}%;--c:${t.color}">⛵<span>${esc(t.name)}</span></div></div>`).join('');
+  // 수동 입력
+  $('mTeam').innerHTML=T.teams.map((t,i)=>`<option value="${i}">${i+1}. ${esc(t.name)}</option>`).join('');
+  $('mRound').innerHTML=Array.from({length:T.rounds},(_,i)=>`<option ${i+1===T.round?'selected':''}>${i+1}</option>`).join('');
+  tTick();
+}
+$('mAdd').onclick=()=>{
+  const team=+$('mTeam').value,r=+$('mRound').value,sc=parseInt($('mScore').value,10),cd=$('mCode').value.trim().toUpperCase();
+  if(!Number.isFinite(sc)){toast('점수를 넣어 주세요');return}
+  if(cd!==chk(T.seed,team,r,sc)){toast('확인 코드가 맞지 않아요');return}
+  if(T.revealed[r]){toast('이미 공개한 라운드예요');return}
+  T.teams[team].res[r]={score:sc,ships:[],via:'code'};$('mScore').value='';$('mCode').value='';tSave();tRender();toast(`${T.teams[team].name} ${r}라운드 ${sc}점 넣었어요`);
+};
+function tTick(){
+  if(!T)return;
+  if(T.phase==='play'){const s=Math.max(0,Math.ceil((T.endAt-Date.now())/1000));$('tTimer').textContent=fmtLeft(s);$('tTimer').classList.toggle('low',s<=30);if(s<=0)tCloseRound()}
+  else{$('tTimer').textContent=T.phase==='closed'?'⏹ 끝':T.phase==='reveal'||T.phase==='end'?'🎉':'--:--';$('tTimer').classList.remove('low')}
+}
+setInterval(()=>{if(T&&!$('tRun').classList.contains('hidden'))tTick()},500);
+
+/* =========================================================
+   4. 모둠(학생) 화면
+   ========================================================= */
+let ST=null,sPeer=null,sConn=null,sTimer=null,sweep=null,curDay=null;
+function sSave(){store.set('segok2-s',ST)}
+$('jCode').oninput=e=>{e.target.value=e.target.value.replace(/\D/g,'').slice(0,5)};
+$('jCode').onkeydown=e=>{if(e.key==='Enter')$('jFind').onclick()};
+$('jFind').onclick=()=>{
+  const code=$('jCode').value.trim(),m=+code.slice(0,2);
+  if(!/^\d{5}$/.test(code)||m<1||m>12){jMsg('참가 코드 5자리를 다시 확인해 주세요.');return}
+  ST={code,seed:+code.slice(2),y0:yearFor(m),m0:m,team:null,name:'',color:'',rounds:3,speed:10,cur:1,tRound:null,tOpen:false,online:false,offline:false,teamNames:null,R:{},endAt:0};
+  $('jTeams').innerHTML='';$('jOffline').classList.add('hidden');
+  jMsg('선생님 화면을 찾고 있어요… 📡');sConnect();
+  clearTimeout(sTimer);sTimer=setTimeout(()=>{if(!ST.online)jOfflineShow()},7000);
+};
+function jMsg(t){$('jMsg').classList.remove('hidden');$('jMsg').innerHTML=t}
+function jOfflineShow(){
+  jMsg('선생님 화면과 연결이 안 돼요. 와이파이를 확인하거나, 아래처럼 <b>연결 없이</b> 시작해도 같은 달력으로 할 수 있어요.');
+  $('oTeam').innerHTML=Array.from({length:8},(_,i)=>`<option value="${i}">${i+1}모둠</option>`).join('');
+  $('jOffline').classList.remove('hidden');
+}
+$('oStart').onclick=()=>{const i=+$('oTeam').value;ST.offline=true;ST.team=i;ST.name=$('oName').value.trim()||(i+1)+'모둠';ST.color=COLORS[i];sSave();show('sPlay');sSync()};
+function sConnect(){
+  if(!window.Peer){if(!$('sJoin').classList.contains('hidden'))jOfflineShow();return}
+  try{if(sPeer)sPeer.destroy()}catch(e){}
+  sPeer=new Peer(PEER_OPT);
+  sPeer.on('open',()=>{
+    sConn=sPeer.connect(PEER_PREFIX+ST.code,{reliable:true});
+    sConn.on('open',()=>{ST.online=true;sConn.send({t:'hi',team:ST.team});sNet()});
+    sConn.on('data',sOnData);
+    sConn.on('close',()=>{ST.online=false;sNet();setTimeout(()=>{if(!ST.online)sConnect()},3000)});
+  });
+  sPeer.on('error',e=>{
+    ST.online=false;sNet();
+    if(!$('sJoin').classList.contains('hidden')){if(e.type==='peer-unavailable')jMsg('이 코드의 선생님 화면을 찾지 못했어요. 코드를 다시 확인해 주세요.');jOfflineShow()}
+    else setTimeout(()=>{if(!ST.online)sConnect()},5000);
+  });
+}
+function sOnData(d){
+  if(!d||typeof d!=='object')return;
+  if(d.t==='hello'){
+    ST.rounds=d.rounds;ST.speed=d.speed;ST.teamNames=d.teams;ST.tRound=d.round;ST.tOpen=d.open;ST.offline=false;
+    if(d.open)ST.endAt=Date.now()+d.left*1000;
+    if(ST.team!==null&&d.teams[ST.team])ST.name=d.teams[ST.team];
+    sSave();
+    if(ST.team===null)jTeamsShow();else sSync();
+  }
+  if(d.t==='close'){ST.tOpen=false;sSave();sSync()}
+  if(d.t==='ack'&&ST.R[d.round]){ST.R[d.round].sent=true;sSave();if(ST.cur===d.round&&!$('vDone').classList.contains('hidden'))sDoneView()}
+  if(d.t==='end'){ST.ended=true;sSave();sSync()}
+}
+function jTeamsShow(){
+  clearTimeout(sTimer);
+  jMsg('연결됐어요! 우리 모둠을 눌러 주세요. 👇');$('jOffline').classList.add('hidden');
+  $('jTeams').innerHTML=ST.teamNames.map((n,i)=>`<button class="btn ghost" data-i="${i}" style="font-size:20px">${flagHTML(i,COLORS[i])} ${esc(n)}</button>`).join('');
+  $('jTeams').querySelectorAll('button').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;ST.team=i;ST.name=ST.teamNames[i];ST.color=COLORS[i];sSave();try{sConn.send({t:'join',team:i})}catch(e){}show('sPlay');sSync()});
+}
+function sNet(){if(!ST)return;$('sNet').innerHTML=ST.online?'<span class="dot" style="background:var(--green)"></span> 연결됨':ST.offline?'<span class="dot" style="background:#c8d2d6"></span> 연결 없이 하는 중':'<span class="dot" style="background:var(--red)"></span> 다시 연결하는 중…'}
+const sRound=()=>ST.R[ST.cur]||(ST.R[ST.cur]={ships:[],done:false,sent:false});
+const sTotal=()=>Object.values(ST.R).filter(r=>r.done).reduce((a,r)=>a+r.score,0);
+function sView(v){['vWait','vCal','vDay','vDone'].forEach(x=>$(x).classList.toggle('hidden',x!==v))}
+function sSync(){
+  if(!ST||ST.team===null)return;
+  show('sPlay');sNet();
+  $('sFlag').innerHTML=flagHTML(ST.team,ST.color||COLORS[ST.team]);$('sName').textContent=ST.name;
+  if(!ST.offline){
+    if(!ST.tRound){ST.cur=1;sBar();$('waitTitle').textContent='선생님이 1라운드를 열면 시작해요';$('waitSub').textContent='기다리는 동안 물때 용어를 다시 읽어 봐요. (사리, 조금, 만조, 간조)';return sView('vWait')}
+    ST.cur=ST.tRound;
+    const R=sRound();
+    if(!R.done&&!ST.tOpen){sFinishRound(true);return}
+  }
+  const R=sRound();sBar();
+  if(R.done)return sDoneView();
+  if(sweep)return;              // 커서가 도는 중이면 화면 유지
+  if(!$('vDay').classList.contains('hidden')&&curDay)return;
+  sCalView();
+}
+function sBar(){
+  const R=ST.R[ST.cur]||{ships:[]};
+  $('sRound').textContent=`${ST.cur} / ${ST.rounds} 라운드 · 누적 ${sTotal()}점`;
+  $('sShips').innerHTML=Array.from({length:SHIPS},(_,i)=>`<span class="${i<R.ships.length?'used':''}">⛵</span>`).join('');
+}
+setInterval(()=>{
+  if(!ST||$('sPlay').classList.contains('hidden'))return;
+  if(!ST.offline&&ST.tOpen&&ST.endAt){const s=Math.max(0,Math.ceil((ST.endAt-Date.now())/1000));$('sTimer').textContent='⏱ '+fmtLeft(s);$('sTimer').classList.toggle('low',s<=30)}
+  else $('sTimer').textContent='';
+},500);
+function curYM(){return ymAdd(ST.y0,ST.m0,ST.cur-1)}
+function sCalView(){
+  curDay=null;sView('vCal');
+  const [y,m]=curYM(),R=sRound(),used={};R.ships.forEach(s=>{if(s.d)used[s.d]=s});
+  $('calTitle').textContent=`${y}년 ${m}월 법성포 물때표`;
+  $('calHint').textContent=`남은 배 ${SHIPS-R.ships.length}척 · 날짜를 눌러 보세요`;
+  const first=new Date(y,m-1,1).getDay(),days=new Date(y,m,0).getDate();
+  let h=DOW.map((w,i)=>`<div class="dow ${i===0?'sun':''}">${w}</div>`).join('');
+  for(let i=0;i<first;i++)h+='<div class="day empty"></div>';
+  for(let d=1;d<=days;d++){
+    const I=dayInfo(ST.seed,y,m,d),u=used[d];
+    h+=`<button class="day ${I.w==='storm'?'storm':''}" data-d="${d}" ${u?'disabled':''}>
+      <span class="d" style="${new Date(y,m-1,d).getDay()===0?'color:var(--red)':''}">${d}</span><span class="ld">${ldText(I)}</span>
+      <span class="wx" title="${WX[I.w].nm}">${WX[I.w].ic}</span>
+      <div style="margin-top:3px"><span class="badge ${kindCls(I.kind)}">${tideLabel(I)}</span></div>
+      <div class="hw">${tideList(I).map(([t,h])=>`<span class="${h?'up':'dn'}">${hhmm(t)}${h?'▲':'▼'}</span>`).join('<br>')}</div>
+      ${u?`<div class="res">${u.ic}</div>`:''}</button>`;
+  }
+  $('cal').innerHTML=h;
+  $('cal').querySelectorAll('.day[data-d]').forEach(el=>el.onclick=()=>sDayView(+el.dataset.d));
+}
+/* ---- 하루 보기 + 시간 커서 ---- */
+const X=t=>40+t/24*880, Y=lv=>232-lv/TOP*172;
+function tlSVG(I,res){
+  let s=`<svg class="tl" viewBox="0 0 960 270" xmlns="http://www.w3.org/2000/svg">`;
+  s+=`<rect x="${X(0)}" y="56" width="880" height="176" fill="#bfe6f7"/>`;
+  s+=`<rect x="${X(0)}" y="56" width="${X(I.rise)-X(0)}" height="176" fill="#22325a"/><rect x="${X(I.set)}" y="56" width="${X(24)-X(I.set)}" height="176" fill="#22325a"/>`;
+  s+=`<text x="${(X(0)+X(I.rise))/2}" y="150" text-anchor="middle" font-size="26">🌙</text><text x="${(X(I.set)+X(24))/2}" y="150" text-anchor="middle" font-size="26">🌙</text>`;
+  s+=`<text x="${X(I.rise)}" y="76" text-anchor="middle" font-size="18">🌅</text><text x="${X(I.set)}" y="76" text-anchor="middle" font-size="18">🌇</text>`;
+  if(I.fogUntil){const a=Math.max(I.rise,0);s+=`<rect x="${X(a)}" y="56" width="${X(I.fogUntil)-X(a)}" height="176" fill="#e6eaec" opacity=".92"/><text x="${(X(a)+X(I.fogUntil))/2}" y="150" text-anchor="middle" font-size="20" font-family="Jua" fill="#55666e">🌫️ 안개</text>`}
+  if(I.w==='storm')s+=`<rect x="${X(0)}" y="56" width="880" height="176" fill="#7b4fa0" opacity=".28"/><text x="480" y="140" text-anchor="middle" font-size="30" font-family="Jua" fill="#4b2a6a">🌊 풍랑주의보 🌊</text>`;
+  if(I.w==='wind')s+=`<text x="${X(12)}" y="110" text-anchor="middle" font-size="22" font-family="Jua" fill="#2a6a8a" opacity=".7">🌬️ 순풍 🌬️</text>`;
+  if(res){ // 물높이 곡선 공개
+    let p='';for(let k=0;k<=144;k++){const t=k/6;p+=(k?'L':'M')+X(t).toFixed(1)+' '+Y(level(I,t)).toFixed(1)}
+    s+=`<defs><clipPath id="cp"><rect x="0" y="0" height="270" width="0"><animate attributeName="width" from="0" to="960" dur="1.3s" fill="freeze"/></rect></clipPath></defs>`;
+    s+=`<g clip-path="url(#cp)"><path d="${p}L${X(24)} 232L${X(0)} 232Z" fill="#3fa7d6" opacity=".5"/><path d="${p}" fill="none" stroke="#0f5a7a" stroke-width="3"/></g>`;
+    s+=`<line x1="${X(0)}" x2="${X(24)}" y1="${Y(NEED)}" y2="${Y(NEED)}" stroke="#e08a00" stroke-width="2.5" stroke-dasharray="9 6"/><text x="${X(24)-4}" y="${Y(NEED)-6}" text-anchor="end" font-size="14" font-family="Jua" fill="#b86e00">세곡선이 뜨는 물높이</text>`;
+  }
+  I.hw.forEach(t=>{s+=`<line x1="${X(t)}" x2="${X(t)}" y1="44" y2="232" stroke="#d6332a" stroke-width="2" stroke-dasharray="4 4"/><text x="${X(t)}" y="38" text-anchor="middle" font-size="17" font-family="Jua" fill="#d6332a">▲만조 ${hhmm(t)}</text>`});
+  I.lw.forEach(t=>{s+=`<line x1="${X(t)}" x2="${X(t)}" y1="44" y2="232" stroke="#1e6fd9" stroke-width="2" stroke-dasharray="2 5"/><text x="${X(t)}" y="18" text-anchor="middle" font-size="15" font-family="Jua" fill="#1e6fd9">▼간조 ${hhmm(t)}</text>`});
+  s+=`<rect x="${X(0)}" y="232" width="880" height="8" fill="#8a6b45"/>`;
+  for(let h=0;h<=24;h+=3)s+=`<line x1="${X(h)}" x2="${X(h)}" y1="240" y2="246" stroke="#7c8a91"/><text x="${X(h)}" y="262" text-anchor="middle" font-size="14" fill="#5b7380">${h}시</text>`;
+  if(res){const lv=level(I,res.t);s+=`<circle cx="${X(res.t)}" cy="${Y(lv)}" r="9" fill="${res.pts>0?'#2e9d63':'#d94f3d'}" stroke="#fff" stroke-width="3"/>`}
+  const ct=res?res.t:0;
+  s+=`<g id="cur" transform="translate(${X(ct)} 0)"><line x1="0" x2="0" y1="50" y2="236" stroke="#0f3d56" stroke-width="4"/><rect x="-34" y="196" width="68" height="26" rx="8" fill="#0f3d56"/><text id="curT" x="0" y="215" text-anchor="middle" font-size="17" font-family="Jua" fill="#fff">${hhmm(ct)}</text></g>`;
+  return s+'</svg>';
+}
+function sDayView(d){
+  const R=sRound();if(R.done||R.ships.length>=SHIPS)return;
+  const [y,m]=curYM(),I=dayInfo(ST.seed,y,m,d);curDay=I;sView('vDay');
+  $('dTitle').textContent=`${m}월 ${d}일 (${DOW[new Date(y,m-1,d).getDay()]}) · 음력 ${I.lm?I.lm+'월 ':''}${I.ld}일`;
+  $('dFacts').innerHTML=`<div class="fact">물때<br><b><span class="badge ${kindCls(I.kind)}" style="font-size:17px">${tideLabel(I)}</span></b></div>
+    <div class="fact">날씨<br><b>${WX[I.w].ic} ${WX[I.w].nm}</b><div class="note">${WX[I.w].ds}</div></div>
+    <div class="fact">해<br><b>🌅 ${hhmm(I.rise)} · 🌇 ${hhmm(I.set)}</b></div>
+    <div class="fact">만조 / 간조<br><b class="up">${I.hw.map(hhmm).join(', ')}</b> / <b class="dn">${I.lw.map(hhmm).join(', ')}</b></div>`;
+  $('dTL').innerHTML=tlSVG(I,null);$('dRes').innerHTML='';
+  $('ship').className='ship';$('mud').classList.remove('on');
+  $('dBack').disabled=false;
+  $('dCtl').innerHTML=`<button class="btn gold bigstop" id="dGo">⛵ 출항 준비</button><span class="note">누르면 시간 커서가 0시부터 움직여요. 떠나고 싶은 때에 <b>멈춰!</b>를 눌러요.<br>한 번 멈추면 바꿀 수 없어요.</span>`;
+  $('dGo').onclick=startSweep;
+}
+$('dBack').onclick=()=>{if(!sweep)sCalView()};
+function startSweep(){
+  if(sweep)return;
+  $('dBack').disabled=true;
+  $('dCtl').innerHTML=`<button class="btn red bigstop" id="dStop">멈춰! ✋</button><span class="note">커서가 계속 돌아요. 서두르지 말고 알맞은 때를 기다려요.</span>`;
+  const dur=(ST.speed||10)*1000,t0=performance.now(),cur=$('cur'),ct=$('curT');
+  sweep={t:0,raf:0};
+  const step=now=>{const t=((now-t0)%dur)/dur*24;sweep.t=t;cur.setAttribute('transform',`translate(${X(t)} 0)`);ct.textContent=hhmm(t);sweep.raf=requestAnimationFrame(step)};
+  sweep.raf=requestAnimationFrame(step);
+  $('dStop').onclick=stopSweep;
+  document.onkeydown=e=>{if(sweep&&(e.code==='Space'||e.key==='Enter')){e.preventDefault();stopSweep()}};
+}
+async function stopSweep(){
+  if(!sweep)return;
+  cancelAnimationFrame(sweep.raf);document.onkeydown=null;
+  let t=Math.round(sweep.t*6)/6;if(t>=24)t=23+5/6;
+  sweep=null;
+  const I=curDay,ev=evaluate(I,t),R=sRound();
+  if(R.done)return sSync();     // 그사이 시간이 끝난 경우
+  R.ships.push({d:I.d,t,ic:ev.ic,pts:ev.pts,k:ev.k});sSave();sBar();
+  $('dCtl').innerHTML='';
+  $('dTL').innerHTML=tlSVG(I,{t,pts:ev.pts});
+  const ship=$('ship');
+  if(ev.k==='ok')ship.classList.add('go');
+  else if(ev.k==='storm')ship.classList.add('sink');
+  else if(ev.k==='stuck'){$('mud').classList.add('on');ship.classList.add('stuck')}
+  else ship.style.transform='scaleX(-1)';
+  beep(ev.pts>0);
+  await sleep(1400);
+  const last=R.ships.length>=SHIPS;
+  $('dRes').innerHTML=`<div class="result"><div class="ic">${ev.ic}</div><div style="flex:1"><div class="jua" style="font-size:22px">${hhmm(t)} 출항 — ${ev.msg}</div>
+    <div class="note" style="font-size:14px">그때 물높이 약 ${ev.lv}cm (세곡선이 뜨려면 ${NEED}cm 이상)${ev.why?' · '+ev.why.join(', '):''}</div></div>
+    <div class="pts" style="color:${ev.pts>0?'var(--green)':'var(--red)'}">${ev.pts>0?'+':''}${ev.pts}</div></div>
+    <div style="margin-top:12px"><button class="btn gold" id="dNext" style="font-size:22px">${last?'라운드 결과 보기 ▶':'다음 배 고르기 ▶'}</button></div>`;
+  $('dNext').onclick=()=>{$('ship').style.transform='';if(last)sFinishRound(false);else sCalView()};
+}
+function sFinishRound(timeUp){
+  const R=sRound();if(R.done)return sDoneView();
+  if(sweep){cancelAnimationFrame(sweep.raf);sweep=null;document.onkeydown=null}
+  while(R.ships.length<SHIPS)R.ships.push({d:null,t:null,ic:'⚓',pts:0,k:'none'});
+  R.score=R.ships.reduce((a,s)=>a+s.pts,0);R.done=true;R.timeUp=timeUp;
+  R.check=chk(ST.seed,ST.team,ST.cur,R.score);sSave();sSend();sDoneView();
+}
+function sSend(){
+  const R=ST.R[ST.cur];if(!R||!R.done||R.sent)return;
+  if(ST.online&&sConn&&sConn.open){try{sConn.send({t:'result',team:ST.team,round:ST.cur,score:R.score,check:R.check,ships:R.ships.map(s=>({d:s.d,t:s.t,ic:s.ic,pts:s.pts}))})}catch(e){}}
+}
+function sDoneView(){
+  sView('vDone');sBar();
+  const R=ST.R[ST.cur];const [y,m]=curYM();
+  if(!R.sent)sSend();
+  const list=R.ships.map(s=>s.d?`<div>${s.ic} ${m}월 ${s.d}일 ${hhmm(s.t)} 출항 <b>${s.pts>0?'+':''}${s.pts}</b></div>`:`<div>⚓ 시간이 끝나 출항하지 못했어요 <b>0</b></div>`).join('');
+  let next='';
+  if(ST.ended)next='<div class="tip">게임이 끝났어요. 선생님 화면에서 최종 결과를 봐요! 🏆</div>';
+  else if(ST.offline)next=ST.cur<ST.rounds?`<button class="btn gold" id="oNext" style="font-size:22px;margin-top:12px">${ST.cur+1}라운드로 ▶</button><div class="note">선생님이 다음 라운드를 시작하면 눌러요.</div>`:'<div class="tip">마지막 라운드까지 끝냈어요!</div>';
+  else next=`<div class="tip">${ST.cur<ST.rounds?'다른 모둠이 끝나면 선생님 화면에서 결과가 공개돼요. 다음 라운드를 기다려요!':'선생님 화면에서 최종 결과가 공개돼요!'}</div>`;
+  $('vDone').innerHTML=`<div style="font-size:56px">${R.score>=40?'🎉':R.score>0?'⛵':'😱'}</div><h2 style="margin:4px 0">${ST.cur}라운드 끝${R.timeUp?' (시간 종료)':''}</h2>
+    <div style="display:inline-block;text-align:left;font-size:18px;line-height:2">${list}</div>
+    <div class="jua" style="font-size:28px;margin-top:6px">이번 라운드 <b style="font-size:40px;color:var(--deep)">${R.score}점</b></div>
+    <div style="margin-top:10px">${R.sent?'<span class="dot" style="background:var(--green)"></span> 선생님 화면에 보냈어요':'선생님께 보여 줄 <b>확인 코드</b>'}</div>
+    <div class="donecode">${ST.team+1}모둠 · ${R.score}점 · ${R.check}</div>
+    ${next}
+    <div class="tip">돌아봐요: 성공한 배는 어떤 물때, 만조 몇 시 무렵에 떠났나요? 실패한 배는 무엇 때문이었나요?</div>`;
+  const b=$('oNext');if(b)b.onclick=()=>{ST.cur++;sSave();sSync()};
+}
+
+/* =========================================================
+   5. 이어하기
+   ========================================================= */
+(function resume(){
+  const t=store.get('segok2-t'),s=store.get('segok2-s');
+  if(t&&t.code){T=t;T.net='wait';show('tRun');tOpenPeer();tRender();return}
+  if(s&&s.code&&s.team!==null){ST=s;ST.online=false;show('sPlay');sSync();if(!ST.offline||window.Peer)sConnect();return}
+})();
+</script>
+</body>
+</html>
